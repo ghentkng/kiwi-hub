@@ -1,0 +1,26 @@
+{
+  "name": "professional-website-kaylee-ghent",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ghentkng/kiwi-hub.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ghentkng/kiwi-hub/issues"
+  },
+  "homepage": "https://github.com/ghentkng/kiwi-hub#readme",
+  "description": "",
+  "dependencies": {
+    "dotenv": "^17.2.0",
+    "express": "^5.1.0",
+    "express-session": "^1.18.2"
+  }
+}
