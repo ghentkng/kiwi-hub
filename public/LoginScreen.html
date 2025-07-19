@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Teacher Login</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="form-container">
+    <h2>Teacher Login</h2>
+    <form action="/login" method="POST">
+    <label for="username">Username:</label>
+    <input type="text" name="username" required>
+
+    <label for="password">Password:</label>
+    <input type="password" name="password" required>
+
+    <button type="submit">Login</button>
+    </form>
+<form action="/logout" method="GET">
+    <button type="submit">Logout</button>
+</form>
+</div>
+</body>
+</html>

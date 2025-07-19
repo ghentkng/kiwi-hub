@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Teacher Dashboard</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="form-container">
+    <h1>Teacher Dashboard</h1>
+
+    <div class="filters">
+    <input type="text" id="filter-student" placeholder="Filter by student name">
+
+    <select id="filter-class">
+        <option value="">All Classes</option>
+        <option value="1st Period">1st Period</option>
+        <option value="2nd Period">2nd Period</option>
+        <option value="3rd Period">3rd Period</option>
+    </select>
+
+    <select id="filter-assignment">
+        <option value="">All Assignments</option>
+        <option value="Unit 1 Project">Unit 1 Project</option>
+        <option value="Loops Practice">Loops Practice</option>
+        <option value="Final Reflection">Final Reflection</option>
+    </select>
+
+    <select id="filter-archive">
+        <option value="new">New Only</option>
+        <option value="archived">Archived Only</option>
+        <option value="all">All</option>
+    </select>
+    </div>
+
+    <table>
+    <thead>
+        <tr>
+        <th>Assignment Name</th>
+        <th>Student Name(s)</th>
+        <th>Class</th>
+        <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="submission-table-body">
+        <!-- Filled by JavaScript -->
+    </tbody>
+    </table>
+</div>
+
+<script src="SubmissionsDashboard.js"></script>
+</body>
+</html>

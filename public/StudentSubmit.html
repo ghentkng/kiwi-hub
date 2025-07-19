@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Assignment Submission</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+    <h1>Computer Science Project Submission Portal</h1>
+    <h3>Ghent Fall 2025</h3>
+    <br><br><br><br><br>
+
+    <h2>Submit Your Assignment</h2>
+
+    <form id="submissionForm" enctype="multipart/form-data">
+        <label>
+            Student name(s):
+            <textarea name="studentNames" rows="4" placeholder="Enter one name per line" required></textarea>
+        </label>
+
+        <label>
+            Class:
+            <select name="classPeriod" required>
+                <option value="">-- Select Class --</option>
+                <option value="1st Period">1st Period</option>
+                <option value="2nd Period">2nd Period</option>
+                <option value="3rd Period">3rd Period</option>
+            </select>
+        </label>
+
+        <label>
+            Assignment Name:
+            <select name="assignmentName" required>
+                <option value="">-- Select Assignment --</option>
+                <option value="Unit 1 Project">Unit 1 Project</option>
+                <option value="Loops Practice">Loops Practice</option>
+                <option value="Final Reflection">Final Reflection</option>
+            </select>
+        </label>
+
+        <label>
+            One time code:
+            <input type="text" name="code" required>
+        </label>
+
+        <label>
+            Upload your zip file:
+            <input type="file" name="zipFile" accept=".zip" required>
+            <div class="uploaded" id="fileStatus"></div>
+        </label>
+
+    <div class="error" id="errorMsg"></div>
+
+    <button type="submit">Submit Assignment</button>
+    </form>
+
+    <script src="StudentSubmit.js"></script>
+
+</body>
+</html>
