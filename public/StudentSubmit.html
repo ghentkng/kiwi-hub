@@ -12,15 +12,15 @@
 
     <h2>Submit Your Assignment</h2>
 
-    <form id="submissionForm" enctype="multipart/form-data">
+    <form id="submissionForm" enctype="multipart/form-data" method = "POST">
         <label>
             Student name(s):
-            <textarea name="studentNames" rows="4" placeholder="Enter one name per line" required></textarea>
+            <textarea id="studentNames" name="studentNames" rows="4" placeholder="Enter one name per line" required></textarea>
         </label>
 
-        <label>
+        <label for="classPeriod">
             Class:
-            <select name="classPeriod" required>
+            <select id="classPeriod" name="classPeriod" required>
                 <option value="">-- Select Class --</option>
                 <option value="1st Period">1st Period</option>
                 <option value="2nd Period">2nd Period</option>
@@ -28,9 +28,9 @@
             </select>
         </label>
 
-        <label>
+        <label for="assignmentName">
             Assignment Name:
-            <select name="assignmentName" required>
+            <select id="assignmentName" name="assignmentName" required>
                 <option value="">-- Select Assignment --</option>
                 <option value="Unit 1 Project">Unit 1 Project</option>
                 <option value="Loops Practice">Loops Practice</option>
@@ -38,14 +38,14 @@
             </select>
         </label>
 
-        <label>
+        <label for="code">
             One time code:
             <input type="text" name="code" required>
         </label>
 
-        <label>
+        <label for="zipFile">
             Upload your zip file:
-            <input type="file" name="zipFile" accept=".zip" required>
+            <input type="file" id="zipFile" name="zipFile" accept=".zip" required>
             <div class="uploaded" id="fileStatus"></div>
         </label>
 

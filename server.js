@@ -1,4 +1,20 @@
 // server.js
+const multer = require('multer');
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/');
+    },
+    filename: (req, file, cb) => {
+        const id = Date.now().toString();
+        req.body.submissionId = id;
+        cb(null, `${id}.zip`);
+    }
+});
+
+const upload = multer({ storage });
+
+
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
@@ -34,26 +50,30 @@ res.sendFile(path.join(__dirname, 'public', 'StudentSubmit.html'));
 });
 
 // Handle student submission
-app.post('/submit', (req, res) => {
-const submission = {
-    studentNames: req.body.studentNames,
-    classPeriod: req.body.classPeriod,
-    assignmentName: req.body.assignmentName,
-    code: req.body.code,
-    timestamp: new Date().toISOString(),
-    archived: false,
-    id: Date.now().toString()
-};
+app.post('/submit', upload.single('zipFile'), (req, res) => {
+    const id = req.body.submissionId;
 
-let submissions = [];
-if (fs.existsSync(submissionsPath)) {
-    submissions = JSON.parse(fs.readFileSync(submissionsPath));
-}
-submissions.push(submission);
-fs.writeFileSync(submissionsPath, JSON.stringify(submissions, null, 2));
+    const submission = {
+        id,
+        studentNames: req.body.studentNames,
+        classPeriod: req.body.classPeriod,
+        assignmentName: req.body.assignmentName,
+        code: req.body.code,
+        timestamp: new Date().toISOString(),
+        archived: false
+    };
 
-res.send('Thank you for your submission!');
+    let submissions = [];
+    if (fs.existsSync(submissionsPath)) {
+        submissions = JSON.parse(fs.readFileSync(submissionsPath));
+    }
+
+    submissions.push(submission);
+    fs.writeFileSync(submissionsPath, JSON.stringify(submissions, null, 2));
+
+    res.send('Thank you for your submission!');
 });
+
 
 // Login routes
 app.get('/login', (req, res) => {
