@@ -58,6 +58,9 @@ res.send('Thank you for your submission!');
 
 // Login routes
 app.get('/login', (req, res) => {
+if (req.session.loggedIn) {
+    return res.redirect('/dashboard');  // Optional; can remove to prevent loop
+}
 res.sendFile(path.join(__dirname, 'public', 'LoginScreen.html'));
 });
 
