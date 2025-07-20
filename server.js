@@ -21,9 +21,6 @@ cookie: {
     sameSite: 'lax'     // Prevents infinite redirects in most setups
 }
 }));
-app.use((req, res) => {
-    res.redirect('/');
-});
 
 const ADMIN_USER = process.env.ADMIN_USER || 'teacher';
 const ADMIN_PASS = process.env.ADMIN_PASS || 'mypassword';
