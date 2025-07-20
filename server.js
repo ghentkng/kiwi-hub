@@ -6,16 +6,20 @@ const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
-app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
 
+app.set('trust proxy', 1);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
 secret: process.env.SESSION_SECRET || 'defaultsecret',
 resave: false,
-saveUninitialized: false
+saveUninitialized: false,
+cookie: {
+    secure: true,       // Only send cookie over HTTPS
+    sameSite: 'lax'     // Prevents infinite redirects in most setups
+}
 }));
 app.use((req, res) => {
     res.redirect('/');
