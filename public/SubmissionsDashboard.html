@@ -7,7 +7,7 @@
 </head>
 <body>
 <div class="form-container">
-    <h1>Teacher Dashboard</h1>
+    <h1>Submissions Dashboard</h1>
 
     <div class="filters">
     <input type="text" id="filter-student" placeholder="Filter by student name">
@@ -46,6 +46,16 @@
         <!-- Filled by JavaScript -->
     </tbody>
     </table>
+</div>
+<div id="codeModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h3>Verify One-Time Code</h3>
+        <p id="modal-student-name"></p>
+        <input type="text" id="entered-code" placeholder="Enter one-time code">
+        <button id="confirm-download">Download</button>
+        <button id="archive-instead">Archive</button>
+        <button onclick="closeModal()">Cancel</button>
+    </div>
 </div>
 
 <script src="SubmissionsDashboard.js"></script>

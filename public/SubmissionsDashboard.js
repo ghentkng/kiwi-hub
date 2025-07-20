@@ -1,4 +1,41 @@
 // dashboard.js
+let currentDownloadId = null;
+let expectedCode = null;
+
+function showCodeModal(id, studentName, code) {
+    currentDownloadId = id;
+    expectedCode = code;
+    document.getElementById('modal-student-name').textContent =
+        `Student: ${studentName}`;
+    document.getElementById('entered-code').value = '';
+    document.getElementById('codeModal').style.display = 'block';
+}
+
+function closeModal() {
+    document.getElementById('codeModal').style.display = 'none';
+    currentDownloadId = null;
+    expectedCode = null;
+}
+
+document.getElementById('confirm-download').addEventListener('click', () => {
+    const entered = document.getElementById('entered-code').value.trim();
+    if (entered === expectedCode) {
+        fetch(`/download/${currentDownloadId}`, { method: 'POST' })
+        .then(res => res.text())
+        .then(msg => alert(msg))
+        .catch(err => alert('Error: ' + err));
+        closeModal();
+    } else {
+        alert('Code does not match.');
+    }
+});
+
+document.getElementById('archive-instead').addEventListener('click', () => {
+    fetch(`/archive/${currentDownloadId}`, { method: 'POST' })
+        .then(res => res.text())
+        .then(msg => alert(msg));
+    closeModal();
+});
 
 document.addEventListener("DOMContentLoaded", () => {
     const filters = {

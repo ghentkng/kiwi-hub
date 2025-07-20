@@ -7,6 +7,8 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const unzipper = require('unzipper');
+const { exec } = require('child_process');
 
 app.set('trust proxy', 1);
 app.use(express.json());
@@ -85,6 +87,49 @@ req.session.destroy(() => {
     res.redirect('/login');
 });
 });
+
+app.post('/download/:id', (req, res) => {
+    if (!req.session.loggedIn) return res.status(403).send('Forbidden');
+
+    const { id } = req.params;
+    const submissions = JSON.parse(fs.readFileSync(submissionsPath));
+    const submission = submissions.find(s => s.id === id);
+
+    if (!submission) return res.status(404).send('Submission not found');
+
+    const zipPath = path.join(__dirname, 'uploads', `${id}.zip`);
+    const extractPath = path.join(__dirname, 'unzipped', id);
+
+    if (!fs.existsSync(zipPath)) return res.status(404).send('Zip file not found');
+
+    fs.createReadStream(zipPath)
+        .pipe(unzipper.Extract({ path: extractPath }))
+        .on('close', () => {
+        // open in VS Code
+        exec(`code "${extractPath}"`, (err) => {
+            if (err) return res.status(500).send('Unzipped, but VS Code failed to open');
+            return res.send('Downloaded, unzipped, and opened in VS Code');
+        });
+        })
+        .on('error', err => {
+        return res.status(500).send('Failed to unzip');
+        });
+});
+
+app.post('/archive/:id', (req, res) => {
+    if (!req.session.loggedIn) return res.status(403).send('Forbidden');
+
+    const { id } = req.params;
+    let submissions = JSON.parse(fs.readFileSync(submissionsPath));
+    const index = submissions.findIndex(s => s.id === id);
+
+    if (index === -1) return res.status(404).send('Not found');
+    submissions[index].archived = true;
+
+    fs.writeFileSync(submissionsPath, JSON.stringify(submissions, null, 2));
+    res.send('Archived');
+});
+
 
 // Serve submissions as JSON (optional: for dashboard.js to fetch live data)
 app.get('/submissions-data', (req, res) => {
