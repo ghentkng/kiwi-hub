@@ -156,14 +156,27 @@ function renderCalendar() {
     }
 }
 
-function cleanupOldNotes(validKeys) {
+function cleanupOldNotes(validDates) {
     const prefix = `calendar_notes_${calendarNamespace}_`;
+    const keysToRemove = [];
+
     for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key.startsWith(prefix) && !validKeys.includes(key)) {
-            localStorage.removeItem(key);
+        const rawKey = localStorage.key(i);
+
+        if (typeof rawKey !== 'string') continue; // skip null or non-string keys
+        if (!rawKey.startsWith(prefix)) continue;
+
+        const datePart = rawKey.slice(prefix.length);
+
+        if (!validDates.includes(datePart)) {
+            keysToRemove.push(rawKey);
         }
     }
+
+    for (const key of keysToRemove) {
+        localStorage.removeItem(key);
+    }
 }
+
 
 document.addEventListener('DOMContentLoaded', renderCalendar);
