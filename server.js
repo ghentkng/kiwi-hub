@@ -165,6 +165,21 @@ if (fs.existsSync(submissionsPath)) {
 }
 });
 
+app.get('/debug-submissions', (req, res) => {
+    const fs = require('fs');
+    const path = require('path');
+    const filePath = path.join(__dirname, 'submissions.json');
+
+    if (!fs.existsSync(filePath)) {
+        return res.status(404).send('submissions.json not found');
+    }
+
+    const content = fs.readFileSync(filePath, 'utf8');
+    res.type('json').send(content);
+});
+
+
 app.listen(PORT, () => {
 console.log(`Server running at http://localhost:${PORT}`);
 });
+
