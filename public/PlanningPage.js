@@ -82,27 +82,22 @@ function generateWeek(startDate) {
     return weekDiv;
 }
 
-function cleanupOldNotes() {
-    const today = new Date();
-    const currentMonday = getMonday(today);
-    const lastSunday = new Date(currentMonday);
-    lastSunday.setDate(currentMonday.getDate() - 1); // Yesterday (Sunday before this week)
+function cleanupOldNotes(validDates) {
+    const prefix = `calendar_notes_${calendarNamespace}_`;
 
-    // Loop through all localStorage keys
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
 
-        // Only process calendar note keys for this page
-        if (key.startsWith(`calendar_notes_${calendarNamespace}_`)) {
-            const datePart = key.split('_').slice(-1)[0];
-            const noteDate = new Date(datePart);
-
-            if (noteDate < lastSunday) {
+        // Only proceed if the key exists and matches our pattern
+        if (key && key.startsWith(prefix)) {
+            const datePart = key.slice(prefix.length);
+            if (!validDates.includes(datePart)) {
                 localStorage.removeItem(key);
             }
         }
     }
 }
+
 
 
 function renderCalendar() {
