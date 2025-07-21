@@ -197,6 +197,21 @@ app.get('/submissions-data', async (req, res) => {
     }
 });
 
+app.get('/grading', (req, res) => {
+    if (!req.session.loggedIn) {
+        return res.redirect('/login');
+    }
+    res.sendFile(path.join(__dirname, 'public', 'SubmissionsDashboard.html'));
+});
+
+app.get('/cs1planning', (req, res) => {
+    if (!req.session.loggedIn) {
+        return res.redirect('/login');
+    }
+    res.sendFile(path.join(__dirname, 'public', 'CS1Planning.html'));
+});
+
+
 
 app.listen(PORT, () => {
 console.log(`Server running at http://localhost:${PORT}`);
