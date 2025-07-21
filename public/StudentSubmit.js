@@ -1,3 +1,5 @@
+console.log("🚀 studentscript.js is loaded");
+
 const form = document.getElementById("submissionForm");
     const fileInput = form.elements["zipFile"];
     const fileStatus = document.getElementById("fileStatus");
