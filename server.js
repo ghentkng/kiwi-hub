@@ -12,7 +12,7 @@ const storage = multer.diskStorage({
     }
 });
 
-const upload = multer({ storage });
+const upload = multer({ dest: 'uploads/' });
 
 
 const express = require('express');
@@ -51,27 +51,28 @@ res.sendFile(path.join(__dirname, 'public', 'StudentSubmit.html'));
 
 // Handle student submission
 app.post('/submit', upload.single('zipFile'), (req, res) => {
-    const id = req.body.submissionId;
-
     const submission = {
-        id,
         studentNames: req.body.studentNames,
         classPeriod: req.body.classPeriod,
         assignmentName: req.body.assignmentName,
         code: req.body.code,
         timestamp: new Date().toISOString(),
-        archived: false
+        archived: false,
+        id: Date.now().toString()
     };
 
+    // Save uploaded file details
+    submission.file = req.file ? req.file.filename : null;
+
+    // Save submission to JSON file
     let submissions = [];
     if (fs.existsSync(submissionsPath)) {
         submissions = JSON.parse(fs.readFileSync(submissionsPath));
     }
-
     submissions.push(submission);
     fs.writeFileSync(submissionsPath, JSON.stringify(submissions, null, 2));
 
-    res.send('Thank you for your submission!');
+    res.status(200).send('Thank you for your submission!');
 });
 
 
