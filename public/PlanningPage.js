@@ -1,3 +1,5 @@
+const markdownLinkRegex = /^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/;
+
 function getMonday(date) {
     const d = new Date(date);
     const day = d.getDay(); // Sunday = 0, Monday = 1, ...
@@ -16,19 +18,22 @@ function formatDate(date) {
 }
 
 function renderAliasLinks(textarea, container) {
-    container.innerHTML = ''; // clear old links
-    const text = textarea.value;
-    const regex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
-    let match;
+    container.innerHTML = '';
+    const lines = textarea.value.split('\n');
 
-    while ((match = regex.exec(text)) !== null) {
-        const [_, label, url] = match;
-        const link = document.createElement('a');
-        link.href = url;
-        link.target = '_blank';
-        link.textContent = label;
-        link.style.display = 'block';
-        container.appendChild(link);
+    const regex = /^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/;
+
+    for (const line of lines) {
+        const match = line.match(regex);
+        if (match) {
+            const [_, label, url] = match;
+            const link = document.createElement('a');
+            link.href = url;
+            link.target = '_blank';
+            link.textContent = label;
+            link.style.display = 'block';
+            container.appendChild(link);
+        }
     }
 }
 
@@ -66,10 +71,33 @@ function generateWeek(startDate, validDates) {
             renderAliasLinks(textarea, aliasContainer);
         });
 
+        const wrapper = document.createElement('div');
+        wrapper.className = 'day-wrapper';
+
+        wrapper.appendChild(textarea);
+        wrapper.appendChild(aliasContainer);
         dayDiv.appendChild(label);
-        dayDiv.appendChild(textarea);
-        dayDiv.appendChild(aliasContainer);
-        weekDiv.appendChild(dayDiv);
+        dayDiv.appendChild(wrapper);
+
+        // Show/hide alias links vs textarea
+        textarea.addEventListener('blur', () => {
+            renderAliasLinks(textarea, aliasContainer);
+            aliasContainer.style.display = 'block';
+            textarea.style.display = 'none';
+        });
+
+        aliasContainer.addEventListener('click', () => {
+            aliasContainer.style.display = 'none';
+            textarea.style.display = 'block';
+            textarea.focus();
+        });
+
+        if (markdownLinkRegex.test(textarea.value.trim())) {
+            textarea.style.display = 'none';
+            aliasContainer.style.display = 'block';
+        } else {
+            aliasContainer.style.display = 'none';
+        }
     }
 
     return weekDiv;
