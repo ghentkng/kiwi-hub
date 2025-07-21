@@ -85,14 +85,14 @@ document.addEventListener("DOMContentLoaded", () => {
     renderTable();
     });
 
-    function renderTable() {
+function renderTable() {
     tableBody.innerHTML = "";
 
     const filtered = data
         .filter(item => {
-        if (filters.class && item.classPeriod !== filters.class) return false;
-        if (filters.assignment && item.assignmentName !== filters.assignment) return false;
-        if (filters.student && !item.studentNames.toLowerCase().includes(filters.student)) return false;
+        if (filters.class && item.class_period !== filters.class) return false;
+        if (filters.assignment && item.assignment_name !== filters.assignment) return false;
+        if (filters.student && !item.student_names.toLowerCase().includes(filters.student)) return false;
         if (filters.archive === "new" && item.archived) return false;
         if (filters.archive === "archived" && !item.archived) return false;
         return true;
@@ -103,11 +103,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const row = document.createElement("tr");
 
         row.innerHTML = `
-        <td>${sub.assignmentName}</td>
-        <td>${sub.studentNames}</td>
-        <td>${sub.classPeriod}</td>
+        <td>${sub.assignment_name}</td>
+        <td>${sub.student_names}</td>
+        <td>${sub.class_period}</td>
         <td>
-            <button onclick="downloadZip('${sub.file}')">Download</button>
             <button onclick="archiveSubmission('${sub.id}')">Archive</button>
         </td>
         `;
@@ -116,18 +115,22 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     }
 
-    window.archiveSubmission = function(id) {
-    const item = data.find(d => d.id === id);
-    if (item) {
-        item.archived = true;
-        renderTable();
-    }
-    }
+window.archiveSubmission = function(id) {
+    fetch(`/archive/${id}`, { method: 'POST' })
+        .then(res => res.text())
+        .then(msg => {
+            const item = data.find(d => d.id === id);
+            if (item) item.archived = true;
+            renderTable();
+        })
+        .catch(err => alert('Error archiving submission: ' + err));
+};
 
-window.downloadZip = function(fileName) {
-const submission = data.find(d => d.file === fileName);
+
+window.downloadZip = function(file_name) {
+const submission = data.find(d => d.file_name === file_name);
 if (submission) {
-    showCodeModal(submission.id, submission.studentNames, submission.code);
+    showCodeModal(submission.id, submission.student_names, submission.code);
 } else {
     alert("Submission not found.");
 }
