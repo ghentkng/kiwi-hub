@@ -97,7 +97,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (filters.archive === "archived" && !item.archived) return false;
         return true;
         })
-        .sort((a, b) => new Date(a.submittedAt) - new Date(b.submittedAt));
+        .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
     for (const sub of filtered) {
         const row = document.createElement("tr");
@@ -107,7 +107,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <td>${sub.studentNames}</td>
         <td>${sub.classPeriod}</td>
         <td>
-            <button onclick="downloadZip('${sub.zipFile}')">Download</button>
+            <button onclick="downloadZip('${sub.file}')">Download</button>
             <button onclick="archiveSubmission('${sub.id}')">Archive</button>
         </td>
         `;
@@ -125,7 +125,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 window.downloadZip = function(fileName) {
-const submission = data.find(d => d.zipFile === fileName);
+const submission = data.find(d => d.file === fileName);
 if (submission) {
     showCodeModal(submission.id, submission.studentNames, submission.code);
 } else {
