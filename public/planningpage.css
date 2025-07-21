@@ -1,0 +1,32 @@
+#calendar-container {
+display: flex;
+flex-direction: column;
+gap: 1rem;
+margin-top: 1rem;
+}
+
+.week {
+display: flex;
+gap: 1rem;
+}
+
+.day {
+flex: 1;
+min-height: 100px;
+border: 1px solid #aaa;
+padding: 8px;
+box-sizing: border-box;
+background: #f9f9f9;
+}
+
+.day textarea {
+width: 100%;
+resize: vertical;
+min-height: 80px;
+border: none;
+outline: none;
+font-family: inherit;
+background: transparent;
+}
+
+body{background-color: white;}
