@@ -85,11 +85,16 @@ function generateWeek(startDate) {
 function cleanupOldNotes(validDates) {
     const prefix = `calendar_notes_${calendarNamespace}_`;
 
+    // Collect all keys first (because localStorage length changes as you delete)
+    const keys = [];
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
+        if (key) keys.push(key);
+    }
 
-        // Only proceed if the key exists and matches our pattern
-        if (key && key.startsWith(prefix)) {
+    // Now check and clean
+    for (const key of keys) {
+        if (key.startsWith(prefix)) {
             const datePart = key.slice(prefix.length);
             if (!validDates.includes(datePart)) {
                 localStorage.removeItem(key);
@@ -97,6 +102,7 @@ function cleanupOldNotes(validDates) {
         }
     }
 }
+
 
 
 
