@@ -16,9 +16,32 @@ function formatDate(date) {
 return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
+function renderAliasLinks(textarea, container) {
+    container.innerHTML = ''; // clear old links
+    const text = textarea.value;
+
+    const regex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+    let match;
+
+    while ((match = regex.exec(text)) !== null) {
+        const [_, label, url] = match;
+        const link = document.createElement('a');
+        link.href = url;
+        link.target = '_blank';
+        link.textContent = label;
+        link.style.display = 'block';
+        container.appendChild(link);
+    }
+}
+
+
 function generateWeek(startDate) {
     const weekDiv = document.createElement('div');
     weekDiv.className = 'week';
+    const aliasContainer = document.createElement('div');
+    aliasContainer.className = 'alias-links';
+    dayDiv.appendChild(aliasContainer);
+
 
     for (let i = 0; i < 5; i++) {
         const dayDate = new Date(startDate);
@@ -55,21 +78,87 @@ function generateWeek(startDate) {
     return weekDiv;
 }
 
+function cleanupOldNotes() {
+    const today = new Date();
+    const currentMonday = getMonday(today);
+    const lastSunday = new Date(currentMonday);
+    lastSunday.setDate(currentMonday.getDate() - 1); // Yesterday (Sunday before this week)
+
+    // Loop through all localStorage keys
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+
+        // Only process calendar note keys for this page
+        if (key.startsWith(`calendar_notes_${calendarNamespace}_`)) {
+            const datePart = key.split('_').slice(-1)[0];
+            const noteDate = new Date(datePart);
+
+            if (noteDate < lastSunday) {
+                localStorage.removeItem(key);
+            }
+        }
+    }
+}
+
 
 function renderCalendar() {
-const container = document.getElementById('calendar-container');
-container.innerHTML = '';
+    cleanupOldNotes();
 
-const today = new Date();
-const currentMonday = getMonday(today);
-const nextMonday = new Date(currentMonday);
-nextMonday.setDate(currentMonday.getDate() + 7);
+    const container = document.getElementById('calendar-container');
+    container.innerHTML = '';
 
-const currentWeek = generateWeek(currentMonday);
-const nextWeek = generateWeek(nextMonday);
+    const today = new Date();
+    const currentMonday = getMonday(today);
 
-container.appendChild(currentWeek);
-container.appendChild(nextWeek);
+    for (let w = 0; w < 5; w++) {
+        const weekStart = new Date(currentMonday);
+        weekStart.setDate(currentMonday.getDate() + w * 7);
+
+        const weekDiv = document.createElement('div');
+        weekDiv.className = 'week';
+
+        for (let i = 0; i < 5; i++) {
+            const dayDate = new Date(weekStart);
+            dayDate.setDate(weekStart.getDate() + i);
+            const dayKey = dayDate.toISOString().split('T')[0];
+
+            const dayDiv = document.createElement('div');
+            dayDiv.className = 'day';
+
+            const label = document.createElement('div');
+            label.textContent = formatDate(dayDate);
+            label.style.fontWeight = 'bold';
+            label.style.marginBottom = '0.5em';
+
+            const textarea = document.createElement('textarea');
+            textarea.placeholder = "Add notes or links...";
+            textarea.value = localStorage.getItem(getStorageKey(dayKey)) || '';
+
+            // Save changes automatically
+            textarea.addEventListener('input', () => {
+                const key = getStorageKey(dayDate.toDateString());
+                localStorage.setItem(key, textarea.value);
+                renderAliasLinks(textarea, aliasContainer);
+            });
+
+
+            dayDiv.appendChild(label);
+            dayDiv.appendChild(textarea);
+            weekDiv.appendChild(dayDiv);
+        }
+
+        container.appendChild(weekDiv);
+    }
+}
+
+function cleanupOldNotes(validKeys) {
+    const prefix = `calendar_notes_${calendarNamespace}_`;
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith(prefix) && !validKeys.includes(key)) {
+            localStorage.removeItem(key);
+        }
+    }
 }
 
 document.addEventListener('DOMContentLoaded', renderCalendar);

@@ -93,13 +93,15 @@ res.sendFile(path.join(__dirname, 'public', 'LoginScreen.html'));
 });
 
 app.post('/login', (req, res) => {
-const { username, password } = req.body;
-if (username === ADMIN_USER && password === ADMIN_PASS) {
-    req.session.loggedIn = true;
-    res.redirect('/grading');
-} else {
-    res.send('Login failed. <a href="/login">Try again</a>');
-}
+    const { username, password } = req.body;
+    if (username === ADMIN_USER && password === ADMIN_PASS) {
+        req.session.loggedIn = true;
+        const redirectTo = req.session.redirectAfterLogin || '/grading';
+        delete req.session.redirectAfterLogin;
+        res.redirect(redirectTo);
+    } else {
+        res.send('Login failed. <a href="/login">Try again</a>');
+    }
 });
 
 // Protected dashboard
@@ -199,6 +201,7 @@ app.get('/submissions-data', async (req, res) => {
 
 app.get('/grading', (req, res) => {
     if (!req.session.loggedIn) {
+        req.session.redirectAfterLogin = '/grading';
         return res.redirect('/login');
     }
     res.sendFile(path.join(__dirname, 'public', 'SubmissionsDashboard.html'));
@@ -206,12 +209,11 @@ app.get('/grading', (req, res) => {
 
 app.get('/cs1planning', (req, res) => {
     if (!req.session.loggedIn) {
+        req.session.redirectAfterLogin = '/cs1planning';
         return res.redirect('/login');
     }
     res.sendFile(path.join(__dirname, 'public', 'CS1Planning.html'));
 });
-
-
 
 app.listen(PORT, () => {
 console.log(`Server running at http://localhost:${PORT}`);

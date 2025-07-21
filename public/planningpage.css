@@ -6,17 +6,22 @@ margin-top: 1rem;
 }
 
 .week {
-display: flex;
-gap: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1em;
+    margin-bottom: 1.5em;
 }
 
 .day {
-flex: 1;
-min-height: 100px;
-border: 1px solid #aaa;
-padding: 8px;
-box-sizing: border-box;
-background: #f9f9f9;
+    flex: 1 1 250px; /* wider than before */
+    padding: 1em;
+    border: 1px solid #ccc;
+    min-height: 150px;
+    display: flex;
+    flex-direction: column;
+    resize: vertical;
+    overflow: auto;
+    background: #f9f9f9;
 }
 
 .day textarea {
