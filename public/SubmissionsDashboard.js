@@ -124,42 +124,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     }
 
-    window.downloadZip = function(fileName) {
-    alert(`Pretend download and unzip: ${fileName}`);
-    // In real server, use a link to trigger download, or backend endpoint
-    // Example: window.open(`/download/${fileName}`);
-    }
+window.downloadZip = function(fileName) {
+const submission = data.find(d => d.zipFile === fileName);
+if (submission) {
+    showCodeModal(submission.id, submission.studentNames, submission.code);
+} else {
+    alert("Submission not found.");
+}
+}
 
     renderTable();
 });
-
-// Dummy data for testing
-const dummyData = [
-    {
-    id: "1",
-    assignmentName: "Test Assignment",
-    studentNames: "TestStudent1",
-    classPeriod: "1st Period",
-    zipFile: "loops_rachel.zip",
-    submittedAt: "2025-07-10T10:00:00Z",
-    archived: false
-    },
-    {
-    id: "2",
-    assignmentName: "Test Assignment",
-    studentNames: "TestStudent2",
-    classPeriod: "2nd Period",
-    zipFile: "loops_john.zip",
-    submittedAt: "2025-07-11T12:30:00Z",
-    archived: false
-    },
-    {
-    id: "3",
-    assignmentName: "Test Assignment 2",
-    studentNames: "TestStudent3",
-    classPeriod: "3rd Period",
-    zipFile: "final_sarah.zip",
-    submittedAt: "2025-07-12T08:45:00Z",
-    archived: true
-    }
-];

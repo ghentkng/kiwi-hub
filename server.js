@@ -64,26 +64,17 @@ app.post('/submit', upload.single('zipFile'), (req, res) => {
     // Save uploaded file details
     submission.file = req.file ? req.file.filename : null;
 
-    console.log("✅ SUBMIT ROUTE HIT");
-    console.log("Submission object:", submission);
-
     // Save submission to JSON file
     let submissions = [];
     if (fs.existsSync(submissionsPath)) {
-        console.log("📄 submissions.json found.");
         submissions = JSON.parse(fs.readFileSync(submissionsPath));
-    }
-    else {
-        console.log("⚠️ submissions.json NOT found, creating new.");
     }
 
     submissions.push(submission);
     try {
         fs.writeFileSync(submissionsPath, JSON.stringify(submissions, null, 2));
-        console.log("✅ Submission saved to submissions.json");
         res.status(200).send('Thank you for your submission!');
     } catch (err) {
-        console.error("❌ Error writing to submissions.json:", err);
         res.status(500).send('Failed to save submission.');
     }
 });
@@ -177,20 +168,6 @@ if (fs.existsSync(submissionsPath)) {
     res.json([]);
 }
 });
-
-app.get('/debug-submissions', (req, res) => {
-    const fs = require('fs');
-    const path = require('path');
-    const filePath = path.join(__dirname, 'submissions.json');
-
-    if (!fs.existsSync(filePath)) {
-        return res.status(404).send('submissions.json not found');
-    }
-
-    const content = fs.readFileSync(filePath, 'utf8');
-    res.type('json').send(content);
-});
-
 
 app.listen(PORT, () => {
 console.log(`Server running at http://localhost:${PORT}`);
