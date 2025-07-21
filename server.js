@@ -151,19 +151,14 @@ app.post('/download/:id', async (req, res) => {
     }
 });
 
-
-app.post('/archive/:id', (req, res) => {
-    if (!req.session.loggedIn) return res.status(403).send('Forbidden');
-
-    const { id } = req.params;
-    app.post('/archive/:id', async (req, res) => {
+app.post('/archive/:id', async (req, res) => {
     if (!req.session.loggedIn) return res.status(403).send('Forbidden');
 
     const { id } = req.params;
 
     try {
         const result = await pool.query(
-            'UPDATE submissions SET archived = TRUE WHERE id = $1',
+            'UPDATE submissions SET archived = true WHERE id = $1 RETURNING *',
             [id]
         );
 
@@ -173,12 +168,11 @@ app.post('/archive/:id', (req, res) => {
 
         res.send('Archived');
     } catch (err) {
-        console.error('DB archive error:', err);
+        console.error('Error archiving submission:', err);
         res.status(500).send('Failed to archive submission');
     }
 });
 
-});
 
 
 app.get('/submissions-data', async (req, res) => {
