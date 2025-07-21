@@ -107,7 +107,8 @@ function cleanupOldNotes(validDates) {
 
 
 function renderCalendar() {
-    cleanupOldNotes();
+    const validKeys = weekDates.map(d => getStorageKey(d));
+    cleanupOldNotes(validKeys);
 
     const container = document.getElementById('calendar-container');
     container.innerHTML = '';
@@ -156,27 +157,15 @@ function renderCalendar() {
     }
 }
 
-function cleanupOldNotes(validDates) {
-    const prefix = `calendar_notes_${calendarNamespace}_`;
-    const keysToRemove = [];
-
+function cleanupOldNotes(validKeys = []) {
     for (let i = 0; i < localStorage.length; i++) {
-        const rawKey = localStorage.key(i);
-
-        if (typeof rawKey !== 'string') continue; // skip null or non-string keys
-        if (!rawKey.startsWith(prefix)) continue;
-
-        const datePart = rawKey.slice(prefix.length);
-
-        if (!validDates.includes(datePart)) {
-            keysToRemove.push(rawKey);
+        const key = localStorage.key(i);
+        if (key && key.startsWith('calendar_notes_') && !validKeys.includes(key)) {
+            localStorage.removeItem(key);
         }
     }
-
-    for (const key of keysToRemove) {
-        localStorage.removeItem(key);
-    }
 }
+
 
 
 document.addEventListener('DOMContentLoaded', renderCalendar);
