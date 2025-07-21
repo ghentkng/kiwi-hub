@@ -1,4 +1,8 @@
 // server.js
+
+const { Pool } = require('pg');
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
 const multer = require('multer');
 
 const storage = multer.diskStorage({
@@ -42,42 +46,42 @@ cookie: {
 
 const ADMIN_USER = process.env.ADMIN_USER || 'teacher';
 const ADMIN_PASS = process.env.ADMIN_PASS || 'mypassword';
-const submissionsPath = path.join(__dirname, 'submissions.json');
 
 // Serve homepage
 app.get('/', (req, res) => {
 res.sendFile(path.join(__dirname, 'public', 'StudentSubmit.html'));
 });
 
-// Handle student submission
-app.post('/submit', upload.single('zipFile'), (req, res) => {
+
+app.post('/submit', upload.single('zipFile'), async (req, res) => {
     const submission = {
-        studentNames: req.body.studentNames,
-        classPeriod: req.body.classPeriod,
-        assignmentName: req.body.assignmentName,
+        student_names: req.body.studentNames,
+        class_period: req.body.classPeriod,
+        assignment_name: req.body.assignmentName,
         code: req.body.code,
-        timestamp: new Date().toISOString(),
-        archived: false,
-        id: Date.now().toString()
+        file_name: req.file ? req.file.filename : null
     };
 
-    // Save uploaded file details
-    submission.file = req.file ? req.file.filename : null;
-
-    // Save submission to JSON file
-    let submissions = [];
-    if (fs.existsSync(submissionsPath)) {
-        submissions = JSON.parse(fs.readFileSync(submissionsPath));
-    }
-
-    submissions.push(submission);
     try {
-        fs.writeFileSync(submissionsPath, JSON.stringify(submissions, null, 2));
+        await pool.query(
+        `INSERT INTO submissions 
+        (student_names, class_period, assignment_name, code, file_name) 
+        VALUES ($1, $2, $3, $4, $5)`,
+        [
+            submission.student_names,
+            submission.class_period,
+            submission.assignment_name,
+            submission.code,
+            submission.file_name
+        ]
+        );
         res.status(200).send('Thank you for your submission!');
     } catch (err) {
-        res.status(500).send('Failed to save submission.');
+        console.error('DB insert error:', err);
+        res.status(500).send('Error saving submission.');
     }
 });
+
 
 
 // Login routes
@@ -113,61 +117,82 @@ req.session.destroy(() => {
 });
 });
 
-app.post('/download/:id', (req, res) => {
+app.post('/download/:id', async (req, res) => {
     if (!req.session.loggedIn) return res.status(403).send('Forbidden');
 
     const { id } = req.params;
-    const submissions = JSON.parse(fs.readFileSync(submissionsPath));
-    const submission = submissions.find(s => s.id === id);
 
-    if (!submission) return res.status(404).send('Submission not found');
+    try {
+        const { rows } = await pool.query('SELECT * FROM submissions WHERE id = $1', [id]);
+        const submission = rows[0];
 
-    const zipPath = path.join(__dirname, 'uploads', `${id}.zip`);
-    const extractPath = path.join(__dirname, 'unzipped', id);
+        if (!submission) return res.status(404).send('Submission not found');
 
-    if (!fs.existsSync(zipPath)) return res.status(404).send('Zip file not found');
+        const zipPath = path.join(__dirname, 'uploads', `${id}.zip`);
+        const extractPath = path.join(__dirname, 'unzipped', id);
 
-    fs.createReadStream(zipPath)
+        if (!fs.existsSync(zipPath)) return res.status(404).send('Zip file not found');
+
+        fs.createReadStream(zipPath)
         .pipe(unzipper.Extract({ path: extractPath }))
         .on('close', () => {
-        // open in VS Code
-        exec(`code "${extractPath}"`, (err) => {
+            exec(`code "${extractPath}"`, (err) => {
             if (err) return res.status(500).send('Unzipped, but VS Code failed to open');
             return res.send('Downloaded, unzipped, and opened in VS Code');
-        });
+            });
         })
         .on('error', err => {
-        return res.status(500).send('Failed to unzip');
+            return res.status(500).send('Failed to unzip');
         });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Database query failed');
+    }
 });
+
 
 app.post('/archive/:id', (req, res) => {
     if (!req.session.loggedIn) return res.status(403).send('Forbidden');
 
     const { id } = req.params;
-    let submissions = JSON.parse(fs.readFileSync(submissionsPath));
-    const index = submissions.findIndex(s => s.id === id);
+    app.post('/archive/:id', async (req, res) => {
+    if (!req.session.loggedIn) return res.status(403).send('Forbidden');
 
-    if (index === -1) return res.status(404).send('Not found');
-    submissions[index].archived = true;
+    const { id } = req.params;
 
-    fs.writeFileSync(submissionsPath, JSON.stringify(submissions, null, 2));
-    res.send('Archived');
+    try {
+        const result = await pool.query(
+            'UPDATE submissions SET archived = TRUE WHERE id = $1',
+            [id]
+        );
+
+        if (result.rowCount === 0) {
+            return res.status(404).send('Submission not found');
+        }
+
+        res.send('Archived');
+    } catch (err) {
+        console.error('DB archive error:', err);
+        res.status(500).send('Failed to archive submission');
+    }
+});
+
 });
 
 
-// Serve submissions as JSON (optional: for dashboard.js to fetch live data)
-app.get('/submissions-data', (req, res) => {
-if (!req.session.loggedIn) {
-    return res.status(403).send('Forbidden');
-}
-if (fs.existsSync(submissionsPath)) {
-    const submissions = JSON.parse(fs.readFileSync(submissionsPath));
-    res.json(submissions);
-} else {
-    res.json([]);
-}
+app.get('/submissions-data', async (req, res) => {
+    if (!req.session.loggedIn) return res.status(403).send('Forbidden');
+
+    try {
+        const result = await pool.query('SELECT * FROM submissions');
+        res.json(result.rows);
+    } catch (err) {
+        console.error('DB read error:', err);
+        res.status(500).send('Failed to load submissions');
+    }
 });
+
 
 app.listen(PORT, () => {
 console.log(`Server running at http://localhost:${PORT}`);

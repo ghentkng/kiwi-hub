@@ -1,0 +1,18 @@
+{
+    "sqltools.connections": [
+        {
+            "pgOptions": {
+                "ssl": {
+                    "rejectUnauthorized": true
+                }
+            },
+            "previewLimit": 50,
+            "server": "dpg-d1v61u3ipnbc73aq7mf0-a.oregon-postgres.render.com",
+            "driver": "PostgreSQL",
+            "database": "kiwi_hub_db",
+            "name": "kiwi_hub_db",
+            "username": "kiwi_hub_db_user",
+            "connectString": "postgresql://kiwi_hub_db_user:O2kfzq4wOabamWCckTqrqM5NzIkg28Ly@dpg-d1v61u3ipnbc73aq7mf0-a.oregon-postgres.render.com/kiwi_hub_db"
+        }
+    ]
+}
