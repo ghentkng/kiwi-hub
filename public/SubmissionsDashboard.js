@@ -45,7 +45,19 @@ document.addEventListener("DOMContentLoaded", () => {
     archive: "new"
     };
 
-    const data = [...dummyData]; // Simulated data load
+    let data = [];
+
+    fetch('/submissions-data')
+    .then(res => res.json())
+    .then(json => {
+        data = json;
+        renderTable();
+    })
+    .catch(err => {
+        console.error('Failed to load submissions:', err);
+        document.getElementById("submission-table-body").innerHTML = "<tr><td colspan='4'>Error loading submissions.</td></tr>";
+    });
+
 
     const tableBody = document.getElementById("submission-table-body");
     const classFilter = document.getElementById("filter-class");
