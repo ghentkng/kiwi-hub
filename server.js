@@ -151,27 +151,37 @@ app.post('/download/:id', async (req, res) => {
     }
 });
 
-app.post('/archive/:id', async (req, res) => {
-    if (!req.session.loggedIn) return res.status(403).send('Forbidden');
-
-    const { id } = req.params;
+app.post('/submit', upload.single('zipFile'), async (req, res) => {
+    const submission = {
+        student_names: req.body.studentNames,
+        class_period: req.body.classPeriod,
+        assignment_name: req.body.assignmentName,
+        code: req.body.code,
+        file_name: req.file ? req.file.filename : null,
+        archived: false
+    };
 
     try {
-        const result = await pool.query(
-            'UPDATE submissions SET archived = true WHERE id = $1 RETURNING *',
-            [id]
+        await pool.query(
+            `INSERT INTO submissions 
+            (student_names, class_period, assignment_name, code, file_name, archived) 
+            VALUES ($1, $2, $3, $4, $5, $6)`,
+            [
+                submission.student_names,
+                submission.class_period,
+                submission.assignment_name,
+                submission.code,
+                submission.file_name,
+                submission.archived
+            ]
         );
-
-        if (result.rowCount === 0) {
-            return res.status(404).send('Submission not found');
-        }
-
-        res.send('Archived');
+        res.status(200).send('Thank you for your submission!');
     } catch (err) {
-        console.error('Error archiving submission:', err);
-        res.status(500).send('Failed to archive submission');
+        console.error('DB insert error:', err);
+        res.status(500).send('Error saving submission.');
     }
 });
+
 
 
 
