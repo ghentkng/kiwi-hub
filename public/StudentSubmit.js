@@ -1,24 +1,24 @@
 console.log("🚀 studentscript.js is loaded");
 
-const form = document.getElementById("submissionForm");
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("submissionForm");
     const fileInput = form.elements["zipFile"];
     const fileStatus = document.getElementById("fileStatus");
     const errorMsg = document.getElementById("errorMsg");
 
     // Show uploaded file name
     fileInput.addEventListener("change", () => {
-    if (fileInput.files.length > 0) {
+        if (fileInput.files.length > 0) {
         fileStatus.textContent = `File uploaded: ${fileInput.files[0].name}`;
-    } else {
+        } else {
         fileStatus.textContent = "";
-    }
+        }
     });
 
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
         errorMsg.textContent = "";
 
-        // Check all fields
         const studentNames = form.elements["studentNames"].value.trim();
         const classPeriod = form.elements["classPeriod"].value;
         const assignmentName = form.elements["assignmentName"].value;
@@ -26,8 +26,8 @@ const form = document.getElementById("submissionForm");
         const file = fileInput.files[0];
 
         if (!studentNames || !classPeriod || !assignmentName || !code || !file) {
-            errorMsg.textContent = "Please complete all fields before submitting.";
-            return;
+        errorMsg.textContent = "Please complete all fields before submitting.";
+        return;
         }
 
         const formData = new FormData();
@@ -39,20 +39,21 @@ const form = document.getElementById("submissionForm");
         formData.append("submittedAt", new Date().toISOString());
 
         try {
-            const res = await fetch("/submit", {
+        const res = await fetch("/submit", {
             method: "POST",
-            body: formData
-            });
+            body: formData,
+        });
 
-            if (res.ok) {
+        if (res.ok) {
             alert("Submission successful!");
             form.reset();
             fileStatus.textContent = "";
-            } else {
+        } else {
             errorMsg.textContent = "Submission failed. Please try again.";
-            }
+        }
         } catch (err) {
-            console.error(err);
-            errorMsg.textContent = "Error connecting to the server.";
+        console.error(err);
+        errorMsg.textContent = "Error connecting to the server.";
         }
     });
+});
