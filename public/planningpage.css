@@ -35,3 +35,12 @@ background: transparent;
 }
 
 body{background-color: white;}
+
+.alias-links a {
+    display: block;
+    color: #0645ad;
+    text-decoration: underline;
+    margin-top: 0.4em;
+    word-break: break-word;
+}
+

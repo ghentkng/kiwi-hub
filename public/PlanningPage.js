@@ -34,14 +34,9 @@ function renderAliasLinks(textarea, container) {
     }
 }
 
-
 function generateWeek(startDate) {
     const weekDiv = document.createElement('div');
     weekDiv.className = 'week';
-    const aliasContainer = document.createElement('div');
-    aliasContainer.className = 'alias-links';
-    dayDiv.appendChild(aliasContainer);
-
 
     for (let i = 0; i < 5; i++) {
         const dayDate = new Date(startDate);
@@ -60,18 +55,27 @@ function generateWeek(startDate) {
         textarea.className = 'calendar-note';
         textarea.setAttribute('data-date', dateStr);
         textarea.placeholder = "Add notes or links...";
-        
+
         // Load from localStorage
         const saved = localStorage.getItem(getStorageKey(dateStr));
         if (saved) textarea.value = saved;
 
-        // Save on input
+        // Alias container (for formatted links)
+        const aliasContainer = document.createElement('div');
+        aliasContainer.className = 'alias-links';
+
+        // Render alias links initially
+        renderAliasLinks(textarea, aliasContainer);
+
+        // Save on input and re-render links
         textarea.addEventListener('input', () => {
             localStorage.setItem(getStorageKey(dateStr), textarea.value);
+            renderAliasLinks(textarea, aliasContainer);
         });
 
         dayDiv.appendChild(label);
         dayDiv.appendChild(textarea);
+        dayDiv.appendChild(aliasContainer);
         weekDiv.appendChild(dayDiv);
     }
 
