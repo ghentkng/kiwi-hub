@@ -87,7 +87,7 @@ app.post('/submit', upload.single('zipFile'), async (req, res) => {
 // Login routes
 app.get('/login', (req, res) => {
 if (req.session.loggedIn) {
-    return res.redirect('/dashboard');  // Optional; can remove to prevent loop
+    return res.redirect('/grading');  // Optional; can remove to prevent loop
 }
 res.sendFile(path.join(__dirname, 'public', 'LoginScreen.html'));
 });
@@ -96,14 +96,14 @@ app.post('/login', (req, res) => {
 const { username, password } = req.body;
 if (username === ADMIN_USER && password === ADMIN_PASS) {
     req.session.loggedIn = true;
-    res.redirect('/dashboard');
+    res.redirect('/grading');
 } else {
     res.send('Login failed. <a href="/login">Try again</a>');
 }
 });
 
 // Protected dashboard
-app.get('/dashboard', (req, res) => {
+app.get('/grading', (req, res) => {
 if (!req.session.loggedIn) {
     return res.redirect('/login');
 }
