@@ -70,38 +70,43 @@ function applyLinkFormatting(div) {
     function processTextNode(node) {
         const text = node.textContent;
 
-        // Track all match replacements
-        const combinedRegex = new RegExp(`${checklistRegex.source}|${linkRegex.source}`, 'g');
-        let match;
-        let lastIndex = 0;
         const fragment = document.createDocumentFragment();
+        let lastIndex = 0;
 
-        while ((match = combinedRegex.exec(text)) !== null) {
+        const regex = new RegExp(`${checklistRegex.source}|${linkRegex.source}`, 'g');
+        let match;
+
+        while ((match = regex.exec(text)) !== null) {
+            const matchStart = match.index;
             const matchText = match[0];
 
-            // Add plain text before match
-            if (match.index > lastIndex) {
-                fragment.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+            // Add preceding plain text
+            if (matchStart > lastIndex) {
+                fragment.appendChild(document.createTextNode(text.slice(lastIndex, matchStart)));
             }
 
             if (matchText.startsWith('{}(')) {
                 const label = match[1];
-                const wrapper = document.createElement('span');
-                wrapper.className = 'checklist-item';
+                if (label) {
+                    const wrapper = document.createElement('span');
+                    wrapper.className = 'checklist-item';
 
-                const box = document.createElement('span');
-                box.className = 'checkbox';
-                box.textContent = '☐';
-                box.style.cursor = 'pointer';
+                    const box = document.createElement('span');
+                    box.className = 'checkbox';
+                    box.textContent = '☐';
+                    box.style.cursor = 'pointer';
 
-                const content = document.createElement('span');
-                content.className = 'checkbox-text';
-                content.textContent = label;
+                    const content = document.createElement('span');
+                    content.className = 'checkbox-text';
+                    content.textContent = label;
 
-                wrapper.appendChild(box);
-                wrapper.appendChild(document.createTextNode(' '));
-                wrapper.appendChild(content);
-                fragment.appendChild(wrapper);
+                    wrapper.appendChild(box);
+                    wrapper.appendChild(document.createTextNode(' '));
+                    wrapper.appendChild(content);
+                    fragment.appendChild(wrapper);
+                } else {
+                    fragment.appendChild(document.createTextNode(matchText));
+                }
             } else if (match[2] && match[3]) {
                 const label = match[2];
                 const url = match[3];
@@ -112,12 +117,14 @@ function applyLinkFormatting(div) {
                 link.textContent = label;
                 fragment.appendChild(link);
                 fragment.appendChild(document.createTextNode(' '));
+            } else {
+                fragment.appendChild(document.createTextNode(matchText));
             }
 
             lastIndex = match.index + matchText.length;
         }
 
-        // Add trailing plain text
+        // Add any remaining text
         if (lastIndex < text.length) {
             fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
         }
@@ -148,6 +155,7 @@ function applyLinkFormatting(div) {
 
     addCheckboxClickHandlers(div);
 }
+
 
 
 
