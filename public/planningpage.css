@@ -46,6 +46,7 @@ body{background-color: white;}
 
 .calendar-note {
     white-space: pre-wrap;
+    outline: none;
 }
 
 .calendar-note:empty:before {

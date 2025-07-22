@@ -15,6 +15,28 @@ function formatDate(date) {
     return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
+function insertLineBreak() {
+    const selection = window.getSelection();
+    if (!selection.rangeCount) return;
+
+    const range = selection.getRangeAt(0);
+    range.deleteContents();
+
+    const br = document.createElement('br');
+    range.insertNode(br);
+
+    // Create a zero-width space after the <br> so the cursor has somewhere to go
+    const space = document.createTextNode('\u200B');
+    range.insertNode(space);
+
+    // Move cursor after the space
+    range.setStartAfter(space);
+    range.setEndAfter(space);
+    selection.removeAllRanges();
+    selection.addRange(range);
+}
+
+
 function formatLinksInEditable(div) {
     try {
         const selection = window.getSelection();
@@ -149,6 +171,14 @@ function generateWeek(startDate, validDates) {
             formatLinksInEditable(textarea); // 💡 format while typing
             localStorage.setItem(getStorageKey(dateStr), textarea.innerHTML);
         });
+
+        textarea.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault(); // prevent default newline
+                insertLineBreak();  // insert controlled line break
+            }
+        });
+
 
         const wrapper = document.createElement('div');
         wrapper.className = 'day-wrapper';
