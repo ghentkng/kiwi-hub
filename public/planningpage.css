@@ -1,22 +1,37 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    max-width: 100vw;
+    overflow-x: hidden;
+    background-color: #f9fbfd;
+}
+
+#page-wrapper {
+    width: 100vw;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
 #calendar-container {
-    width: 100%;
+    width: 100vw;
+    max-width: 100vw;
     padding: 1em;
     box-sizing: border-box;
 }
 
 .week {
     display: grid;
-    flex-wrap: wrap;
     grid-template-columns: repeat(5, 1fr);
     gap: 1em;
     margin-bottom: 2em;
-    width: 100%
+    width: 100%;
 }
 
 .day {
     position: relative;
     min-height: 220px;
-    background-color: #fdd; /* default red */
+    background-color: #fdd;
     border: 1px solid #ccc;
     border-radius: 8px;
     padding: 0.75em;
@@ -24,11 +39,9 @@
     transition: background-color 0.3s ease;
 }
 
-
 .day.complete {
-    background-color: #dfd; /* green when complete */
+    background-color: #dfd;
 }
-
 
 .day-toggle {
     position: absolute;
@@ -39,28 +52,13 @@
 }
 
 .day textarea {
-width: 100%;
-resize: vertical;
-min-height: 80px;
-border: none;
-outline: none;
-font-family: inherit;
-background: transparent;
-}
-
-body{
-    background-color: #f9fbfd;
-    margin: 0;
-    padding: 0;
-}
-
-html, body{
     width: 100%;
-}
-
-main, .container, #page-wrapper {
-    width: 100%;
-    max-width: none;
+    resize: vertical;
+    min-height: 80px;
+    border: none;
+    outline: none;
+    font-family: inherit;
+    background: transparent;
 }
 
 .alias-links a {
@@ -84,23 +82,4 @@ main, .container, #page-wrapper {
 .calendar-note:empty:before {
     content: attr(placeholder);
     color: #aaa;
-}
-
-#page-wrapper {
-    width: 100vw;
-    max-width: 100%;
-    box-sizing: border-box;
-}
-
-#calendar-container {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 1em;
-}
-
-.week {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 1em;
-    width: 100%;
 }
