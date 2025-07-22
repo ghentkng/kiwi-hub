@@ -241,3 +241,22 @@ function renderCalendar() {
 }
 
 document.addEventListener('DOMContentLoaded', renderCalendar);
+
+document.addEventListener('click', (e) => {
+    const target = e.target;
+    if (target.tagName === 'A' && target.closest('[contenteditable]')) {
+        e.preventDefault();
+
+        const editable = target.closest('[contenteditable]');
+        editable.contentEditable = 'false';
+
+        // Let the link open in a new tab
+        window.open(target.href, '_blank');
+
+        // Restore edit mode shortly after
+        setTimeout(() => {
+            editable.contentEditable = 'true';
+        }, 100);
+    }
+});
+
