@@ -34,24 +34,6 @@ function formatLinksInEditable(div) {
 // ✅ Move the regex to global scope so it's usable in multiple functions
 const markdownLinkRegex = /^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/;
 
-function renderAliasLinks(textarea, container) {
-    container.innerHTML = '';
-    const lines = textarea.value.split('\n');
-
-    for (const line of lines) {
-        const match = line.match(markdownLinkRegex);
-        if (match) {
-            const [_, label, url] = match;
-            const link = document.createElement('a');
-            link.href = url;
-            link.target = '_blank';
-            link.textContent = label;
-            link.style.display = 'block';
-            container.appendChild(link);
-        }
-    }
-}
-
 function generateWeek(startDate, validDates) {
     const weekDiv = document.createElement('div');
     weekDiv.className = 'week';
@@ -74,61 +56,26 @@ function generateWeek(startDate, validDates) {
         textarea.contentEditable = true;
         textarea.className = 'calendar-note';
         textarea.setAttribute('data-date', dateStr);
-        textarea.placeholder = "Add notes or links...";
         textarea.innerHTML = localStorage.getItem(getStorageKey(dateStr)) || '';
-        formatLinksInEditable(textarea); // ← call the formatter on load
+        formatLinksInEditable(textarea); // 💡 apply inline links on load
 
-        const aliasContainer = document.createElement('div');
-        aliasContainer.className = 'alias-links';
-
-        renderAliasLinks(textarea, aliasContainer);
-
-        let lastRenderedAlias = '';
-
-    textarea.addEventListener('input', () => {
-    formatLinksInEditable(textarea);
-    localStorage.setItem(getStorageKey(dateStr), textarea.innerHTML);
-    });
-
-
-
-    textarea.addEventListener('blur', () => {
-        const val = textarea.value.trim();
-        if (val === lastRenderedAlias && markdownLinkRegex.test(val)) {
-            // Only hide if the user hasn't changed anything
-            aliasContainer.style.display = 'block';
-            textarea.style.display = 'none';
-        }
-    });
-
-
-
-        aliasContainer.addEventListener('click', () => {
-            aliasContainer.style.display = 'none';
-            textarea.style.display = 'block';
-            textarea.focus();
+        textarea.addEventListener('input', () => {
+            formatLinksInEditable(textarea); // 💡 format while typing
+            localStorage.setItem(getStorageKey(dateStr), textarea.innerHTML);
         });
 
         const wrapper = document.createElement('div');
         wrapper.className = 'day-wrapper';
         wrapper.appendChild(textarea);
-        wrapper.appendChild(aliasContainer);
 
         dayDiv.appendChild(label);
         dayDiv.appendChild(wrapper);
         weekDiv.appendChild(dayDiv);
-
-        // Initial toggle
-        if (markdownLinkRegex.test(textarea.value.trim())) {
-            textarea.style.display = 'none';
-            aliasContainer.style.display = 'block';
-        } else {
-            aliasContainer.style.display = 'none';
-        }
     }
 
     return weekDiv;
 }
+
 
 function cleanupOldNotes(validDates = []) {
     const prefix = `calendar_notes_${calendarNamespace}_`;
