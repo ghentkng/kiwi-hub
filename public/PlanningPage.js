@@ -23,13 +23,12 @@ function insertLineBreak() {
     range.deleteContents();
 
     const br = document.createElement('br');
-    range.insertNode(br);
+    const space = document.createTextNode('\u200B'); // zero-width space
 
-    // Create a zero-width space after the <br> so the cursor has somewhere to go
-    const space = document.createTextNode('\u200B');
-    range.insertNode(space);
+    range.insertNode(space); // insert space first so caret can go there
+    range.insertNode(br);    // then insert the break just before
 
-    // Move cursor after the space
+    // Move caret after space
     range.setStartAfter(space);
     range.setEndAfter(space);
     selection.removeAllRanges();
@@ -102,9 +101,18 @@ function applyLinkFormatting(div) {
     for (const node of fragments) {
         div.appendChild(node);
     }
+    moveCaretToEnd(div);
+
 }
 
-
+function moveCaretToEnd(el) {
+    const range = document.createRange();
+    const sel = window.getSelection();
+    range.selectNodeContents(el);
+    range.collapse(false); // collapse to end
+    sel.removeAllRanges();
+    sel.addRange(range);
+}
 
 function setCaretPosition(el, offset) {
     const range = document.createRange();
