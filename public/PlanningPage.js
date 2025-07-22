@@ -65,23 +65,31 @@ function generateWeek(startDate, validDates) {
 
         renderAliasLinks(textarea, aliasContainer);
 
-        textarea.addEventListener('input', () => {
-            localStorage.setItem(getStorageKey(dateStr), textarea.value);
-            renderAliasLinks(textarea, aliasContainer);
-        });
+        let lastRenderedAlias = '';
 
-        // Toggle display based on content
-        textarea.addEventListener('blur', () => {
-        const trimmed = textarea.value.trim();
-        // Only auto-hide if the content is *only* a markdown link and hasn't changed since last render
-        if (markdownLinkRegex.test(trimmed)) {
-            const lines = trimmed.split('\n');
-            if (lines.length === 1 && markdownLinkRegex.test(lines[0])) {
-                aliasContainer.style.display = 'block';
-                textarea.style.display = 'none';
-            }
+    textarea.addEventListener('input', () => {
+        const val = textarea.value.trim();
+        localStorage.setItem(getStorageKey(dateStr), val);
+        renderAliasLinks(textarea, aliasContainer);
+        
+        // Only auto-toggle display if it's just a single alias line
+        const lines = val.split('\n');
+        if (lines.length === 1 && markdownLinkRegex.test(lines[0])) {
+            lastRenderedAlias = val;
+        } else {
+            lastRenderedAlias = '';
         }
     });
+
+    textarea.addEventListener('blur', () => {
+        const val = textarea.value.trim();
+        if (val === lastRenderedAlias && markdownLinkRegex.test(val)) {
+            // Only hide if the user hasn't changed anything
+            aliasContainer.style.display = 'block';
+            textarea.style.display = 'none';
+        }
+    });
+
 
 
         aliasContainer.addEventListener('click', () => {
