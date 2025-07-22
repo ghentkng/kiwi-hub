@@ -16,19 +16,55 @@ function formatDate(date) {
 }
 
 function formatLinksInEditable(div) {
+    const selection = window.getSelection();
+    const range = selection.getRangeAt(0);
+    const preCaretRange = range.cloneRange();
+    preCaretRange.selectNodeContents(div);
+    preCaretRange.setEnd(range.endContainer, range.endOffset);
+    const caretOffset = preCaretRange.toString().length;
+
     const text = div.innerText;
-
-    // Pattern to match [label](url)
     const regex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
-
-    // Replace with <a> elements
     const html = text.replace(regex, (match, label, url) => {
         return `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
     });
 
-    // Set the HTML content
     div.innerHTML = html;
+
+    // Restore caret
+    setCaretPosition(div, caretOffset);
 }
+
+function setCaretPosition(el, offset) {
+    const range = document.createRange();
+    const sel = window.getSelection();
+    let currentOffset = 0;
+
+    function findNode(node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+            const nextOffset = currentOffset + node.length;
+            if (currentOffset <= offset && offset <= nextOffset) {
+                range.setStart(node, offset - currentOffset);
+                range.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(range);
+                throw 'done';
+            }
+            currentOffset = nextOffset;
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+            for (let i = 0; i < node.childNodes.length; i++) {
+                findNode(node.childNodes[i]);
+            }
+        }
+    }
+
+    try {
+        findNode(el);
+    } catch (e) {
+        if (e !== 'done') throw e;
+    }
+}
+
 
 
 // ✅ Move the regex to global scope so it's usable in multiple functions
