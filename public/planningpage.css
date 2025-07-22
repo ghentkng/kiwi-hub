@@ -13,10 +13,26 @@
 }
 
 .day {
-    flex: 1;
-    min-width: 180px;
-    margin: 0 0.5em;
+    position: relative;
+    background-color: #fdd; /* red by default */
+    transition: background-color 0.3s ease;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 1em;
     box-sizing: border-box;
+}
+
+.day.complete {
+    background-color: #dfd; /* green when complete */
+}
+
+
+.day-toggle {
+    position: absolute;
+    bottom: 0.5em;
+    right: 0.5em;
+    transform: scale(1.2);
+    cursor: pointer;
 }
 
 .day:nth-child(4) {

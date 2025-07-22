@@ -248,6 +248,28 @@ function generateWeek(startDate, validDates) {
 
         dayDiv.appendChild(label);
         dayDiv.appendChild(wrapper);
+        const dayToggle = document.createElement('input');
+        dayToggle.type = 'checkbox';
+        dayToggle.className = 'day-toggle';
+
+        // Load checkbox state from localStorage
+        const dayKey = `calendar_day_state_${calendarNamespace}_${dateStr}`;
+        const isChecked = localStorage.getItem(dayKey) === 'true';
+        dayToggle.checked = isChecked;
+        if (isChecked) dayDiv.classList.add('complete');
+
+        dayToggle.addEventListener('change', () => {
+            if (dayToggle.checked) {
+                dayDiv.classList.add('complete');
+                localStorage.setItem(dayKey, 'true');
+            } else {
+                dayDiv.classList.remove('complete');
+                localStorage.setItem(dayKey, 'false');
+            }
+        });
+
+        dayDiv.appendChild(dayToggle);
+
         weekDiv.appendChild(dayDiv);
     }
 
