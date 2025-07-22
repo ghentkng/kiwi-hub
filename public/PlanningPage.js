@@ -272,6 +272,27 @@ function cleanupOldNotes(validDates = []) {
     keysToDelete.forEach(key => localStorage.removeItem(key));
 }
 
+function addCheckboxClickHandlers(div) {
+    div.querySelectorAll('.checkbox').forEach(box => {
+        box.onclick = () => {
+            const wrapper = box.closest('.checklist-item');
+            const text = wrapper.querySelector('.checkbox-text');
+            const checked = wrapper.classList.toggle('checked');
+
+            box.textContent = checked ? '☑' : '☐';
+
+            if (checked) {
+                wrapper.style.textDecoration = 'line-through';
+                text.style.color = '#888';
+            } else {
+                wrapper.style.textDecoration = 'none';
+                text.style.color = '';
+            }
+        };
+    });
+}
+
+
 function renderCalendar() {
     const container = document.getElementById('calendar-container');
     container.innerHTML = '';
