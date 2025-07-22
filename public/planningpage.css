@@ -6,21 +6,23 @@
 
 .week {
     display: flex;
-    justify-content: space-between;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
+    gap: 1em;
     margin-bottom: 2em;
-    width: 100%;
 }
 
 .day {
     position: relative;
-    background-color: #fdd; /* red by default */
-    transition: background-color 0.3s ease;
+    width: 220px;
+    min-height: 220px;
+    background-color: #fdd; /* default red */
     border: 1px solid #ccc;
     border-radius: 8px;
-    padding: 1em;
+    padding: 0.75em;
     box-sizing: border-box;
+    transition: background-color 0.3s ease;
 }
+
 
 .day.complete {
     background-color: #dfd; /* green when complete */
