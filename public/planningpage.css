@@ -7,14 +7,17 @@
 .week {
     display: flex;
     flex-wrap: wrap;
+    grid-template-columns: repeat(5, 1fr);
     gap: 1em;
     margin-bottom: 2em;
+    width: 100%
 }
 
 .day {
     position: relative;
-    width: 220px;
+    width: auto;
     min-height: 220px;
+    min-width: 0;
     background-color: #fdd; /* default red */
     border: 1px solid #ccc;
     border-radius: 8px;
@@ -54,7 +57,20 @@ font-family: inherit;
 background: transparent;
 }
 
-body{background-color: #f9fbfd;}
+body{
+    background-color: #f9fbfd;
+    margin: 0;
+    padding: 0;
+}
+
+html, body{
+    width: 100%;
+}
+
+main, .container, #page-wrapper {
+    width: 100%;
+    max-width: none;
+}
 
 .alias-links a {
     display: block;
