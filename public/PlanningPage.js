@@ -72,11 +72,17 @@ function generateWeek(startDate, validDates) {
 
         // Toggle display based on content
         textarea.addEventListener('blur', () => {
-            if (markdownLinkRegex.test(textarea.value.trim())) {
+        const trimmed = textarea.value.trim();
+        // Only auto-hide if the content is *only* a markdown link and hasn't changed since last render
+        if (markdownLinkRegex.test(trimmed)) {
+            const lines = trimmed.split('\n');
+            if (lines.length === 1 && markdownLinkRegex.test(lines[0])) {
                 aliasContainer.style.display = 'block';
                 textarea.style.display = 'none';
             }
-        });
+        }
+    });
+
 
         aliasContainer.addEventListener('click', () => {
             aliasContainer.style.display = 'none';
