@@ -9,19 +9,17 @@ margin-top: 1rem;
     display: flex;
     flex-wrap: wrap;
     gap: 1em;
-    margin-bottom: 1.5em;
+    margin-bottom: 2em;
 }
 
 .day {
-    flex: 1 1 250px; /* wider than before */
-    padding: 1em;
-    border: 1px solid #ccc;
-    min-height: 150px;
-    display: flex;
-    flex-direction: column;
-    resize: vertical;
-    overflow: auto;
-    background: #f9f9f9;
+    flex: 1 0 calc(33% - 1em); /* roughly 3 per row */
+    min-width: 200px;
+}
+
+.day:nth-child(4),
+.day:nth-child(5) {
+    flex: 1 0 calc(50% - 1em); /* 2 per row on second line */
 }
 
 .day textarea {
