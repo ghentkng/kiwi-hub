@@ -15,6 +15,22 @@ function formatDate(date) {
     return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
+function formatLinksInEditable(div) {
+    const text = div.innerText;
+
+    // Pattern to match [label](url)
+    const regex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+
+    // Replace with <a> elements
+    const html = text.replace(regex, (match, label, url) => {
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+    });
+
+    // Set the HTML content
+    div.innerHTML = html;
+}
+
+
 // ✅ Move the regex to global scope so it's usable in multiple functions
 const markdownLinkRegex = /^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/;
 
@@ -54,11 +70,13 @@ function generateWeek(startDate, validDates) {
         label.style.fontWeight = 'bold';
         label.style.marginBottom = '0.5em';
 
-        const textarea = document.createElement('textarea');
+        const textarea = document.createElement('div');
+        textarea.contentEditable = true;
         textarea.className = 'calendar-note';
         textarea.setAttribute('data-date', dateStr);
         textarea.placeholder = "Add notes or links...";
-        textarea.value = localStorage.getItem(getStorageKey(dateStr)) || '';
+        textarea.innerHTML = localStorage.getItem(getStorageKey(dateStr)) || '';
+        formatLinksInEditable(textarea); // ← call the formatter on load
 
         const aliasContainer = document.createElement('div');
         aliasContainer.className = 'alias-links';
@@ -68,18 +86,11 @@ function generateWeek(startDate, validDates) {
         let lastRenderedAlias = '';
 
     textarea.addEventListener('input', () => {
-        const val = textarea.value.trim();
-        localStorage.setItem(getStorageKey(dateStr), val);
-        renderAliasLinks(textarea, aliasContainer);
-        
-        // Only auto-toggle display if it's just a single alias line
-        const lines = val.split('\n');
-        if (lines.length === 1 && markdownLinkRegex.test(lines[0])) {
-            lastRenderedAlias = val;
-        } else {
-            lastRenderedAlias = '';
-        }
+    formatLinksInEditable(textarea);
+    localStorage.setItem(getStorageKey(dateStr), textarea.innerHTML);
     });
+
+
 
     textarea.addEventListener('blur', () => {
         const val = textarea.value.trim();
