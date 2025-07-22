@@ -61,51 +61,84 @@ function formatLinksInEditable(div) {
 }
 
 function applyLinkFormatting(div) {
-    const regex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
-
-    // Use innerHTML to preserve tags like <br> and <a>
-    const html = div.innerHTML;
-
-    // Replace only raw markdown inside non-anchor nodes
     const temp = document.createElement('div');
-    temp.innerHTML = html;
+    temp.innerHTML = div.innerHTML;
 
     function recursivelyFormat(node) {
         if (node.nodeType === Node.TEXT_NODE) {
-            const match = regex.exec(node.textContent);
-            if (match) {
-                const [full, label, url] = match;
-                const before = node.textContent.slice(0, match.index);
-                const after = node.textContent.slice(match.index + full.length);
+            const text = node.textContent;
 
-                const fragment = document.createDocumentFragment();
-                if (before) fragment.appendChild(document.createTextNode(before));
+            // Check for checklist pattern: {}(text)
+            const checklistRegex = /\{\}\(([^)]+)\)/g;
+            const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
 
-                const link = document.createElement('a');
-                link.href = url;
-                link.target = '_blank';
-                link.rel = 'noopener noreferrer';
-                link.textContent = label;
-                fragment.appendChild(link);
+            let match;
+            let currentIndex = 0;
+            const fragment = document.createDocumentFragment();
 
-                fragment.appendChild(document.createTextNode(' ')); // allow typing outside
+            while ((match = checklistRegex.exec(text)) !== null || (match = linkRegex.exec(text)) !== null) {
+                const matchIndex = match.index;
 
-                if (after) fragment.appendChild(document.createTextNode(after));
+                // Add preceding plain text
+                if (matchIndex > currentIndex) {
+                    fragment.appendChild(document.createTextNode(text.slice(currentIndex, matchIndex)));
+                }
 
+                if (match[0].startsWith('{}(')) {
+                    // Checklist
+                    const label = match[1];
+                    const wrapper = document.createElement('span');
+                    wrapper.className = 'checklist-item';
+
+                    const box = document.createElement('span');
+                    box.className = 'checkbox';
+                    box.textContent = '☐'; // unchecked box
+                    box.style.cursor = 'pointer';
+
+                    const content = document.createElement('span');
+                    content.className = 'checkbox-text';
+                    content.textContent = label;
+
+                    wrapper.appendChild(box);
+                    wrapper.appendChild(document.createTextNode(' '));
+                    wrapper.appendChild(content);
+                    fragment.appendChild(wrapper);
+                } else {
+                    // Link
+                    const [_, label, url] = match;
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                    link.textContent = label;
+                    fragment.appendChild(link);
+                    fragment.appendChild(document.createTextNode(' '));
+                }
+
+                currentIndex = match.index + match[0].length;
+            }
+
+            // Add any remaining text
+            if (currentIndex < text.length) {
+                fragment.appendChild(document.createTextNode(text.slice(currentIndex)));
+            }
+
+            if (fragment.childNodes.length > 0) {
                 node.replaceWith(fragment);
             }
-        } else if (node.nodeType === Node.ELEMENT_NODE && node.tagName !== 'A') {
+        } else if (node.nodeType === Node.ELEMENT_NODE && node.tagName !== 'A' && node.tagName !== 'SPAN') {
             [...node.childNodes].forEach(recursivelyFormat);
         }
     }
 
     [...temp.childNodes].forEach(recursivelyFormat);
 
-    // Replace content
     div.innerHTML = '';
     while (temp.firstChild) {
         div.appendChild(temp.firstChild);
     }
+
+    addCheckboxClickHandlers(div);
 }
 
 
