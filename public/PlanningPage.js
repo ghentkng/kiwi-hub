@@ -42,11 +42,22 @@ function formatLinksInEditable(div) {
 function applyLinkFormatting(div) {
     const text = div.innerText;
     const regex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+
+    // Create a temporary container to construct DOM safely
+    const temp = document.createElement('div');
+
+    // Replace markdown links with <a> and ensure text can follow
     const html = text.replace(regex, (match, label, url) => {
-        return `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>&nbsp;`; // ← add trailing space
     });
-    div.innerHTML = html;
+
+    temp.innerHTML = html;
+    div.innerHTML = '';
+    while (temp.firstChild) {
+        div.appendChild(temp.firstChild);
+    }
 }
+
 
 function setCaretPosition(el, offset) {
     const range = document.createRange();
