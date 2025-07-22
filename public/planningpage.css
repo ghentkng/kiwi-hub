@@ -5,7 +5,7 @@
 }
 
 .week {
-    display: flex;
+    display: grid;
     flex-wrap: wrap;
     grid-template-columns: repeat(5, 1fr);
     gap: 1em;
@@ -15,9 +15,7 @@
 
 .day {
     position: relative;
-    width: auto;
     min-height: 220px;
-    min-width: 0;
     background-color: #fdd; /* default red */
     border: 1px solid #ccc;
     border-radius: 8px;
@@ -38,13 +36,6 @@
     right: 0.5em;
     transform: scale(1.2);
     cursor: pointer;
-}
-
-.day:nth-child(4) {
-    grid-column: 1 / 2; /* Thursday starts new row */
-}
-.day:nth-child(5) {
-    grid-column: 2 / 3; /* Friday goes next to Thursday */
 }
 
 .day textarea {
