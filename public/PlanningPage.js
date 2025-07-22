@@ -43,20 +43,45 @@ function applyLinkFormatting(div) {
     const text = div.innerText;
     const regex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
 
-    // Create a temporary container to construct DOM safely
-    const temp = document.createElement('div');
+    const fragments = [];
+    let lastIndex = 0;
 
-    // Replace markdown links with <a> and ensure text can follow
-    const html = text.replace(regex, (match, label, url) => {
-        return `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>&nbsp;`; // ← add trailing space
-    });
+    // Extract matches and build fragments
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+        const [full, label, url] = match;
 
-    temp.innerHTML = html;
+        // Add preceding plain text
+        if (match.index > lastIndex) {
+            fragments.push(document.createTextNode(text.slice(lastIndex, match.index)));
+        }
+
+        // Create the <a> element
+        const link = document.createElement('a');
+        link.href = url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = label;
+        fragments.push(link);
+
+        // Add a space node so caret can escape
+        fragments.push(document.createTextNode(' '));
+
+        lastIndex = match.index + full.length;
+    }
+
+    // Add remaining text after last link
+    if (lastIndex < text.length) {
+        fragments.push(document.createTextNode(text.slice(lastIndex)));
+    }
+
+    // Rebuild div contents
     div.innerHTML = '';
-    while (temp.firstChild) {
-        div.appendChild(temp.firstChild);
+    for (const node of fragments) {
+        div.appendChild(node);
     }
 }
+
 
 
 function setCaretPosition(el, offset) {

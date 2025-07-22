@@ -44,3 +44,12 @@ body{background-color: white;}
     word-break: break-word;
 }
 
+.calendar-note {
+    white-space: pre-wrap;
+}
+
+.calendar-note:empty:before {
+    content: attr(placeholder);
+    color: #aaa;
+}
+
