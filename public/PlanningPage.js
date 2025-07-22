@@ -1,5 +1,3 @@
-const markdownLinkRegex = /^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/;
-
 function getMonday(date) {
     const d = new Date(date);
     const day = d.getDay(); // Sunday = 0, Monday = 1, ...
@@ -17,14 +15,15 @@ function formatDate(date) {
     return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
+// ✅ Move the regex to global scope so it's usable in multiple functions
+const markdownLinkRegex = /^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/;
+
 function renderAliasLinks(textarea, container) {
     container.innerHTML = '';
     const lines = textarea.value.split('\n');
 
-    const regex = /^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/;
-
     for (const line of lines) {
-        const match = line.match(regex);
+        const match = line.match(markdownLinkRegex);
         if (match) {
             const [_, label, url] = match;
             const link = document.createElement('a');
@@ -44,8 +43,8 @@ function generateWeek(startDate, validDates) {
     for (let i = 0; i < 5; i++) {
         const dayDate = new Date(startDate);
         dayDate.setDate(dayDate.getDate() + i);
-        const dateStr = dayDate.toISOString().split('T')[0]; // e.g. 2025-07-22
-        validDates.push(dateStr); // Track this date for cleanup later
+        const dateStr = dayDate.toISOString().split('T')[0];
+        validDates.push(dateStr);
 
         const dayDiv = document.createElement('div');
         dayDiv.className = 'day';
@@ -71,19 +70,12 @@ function generateWeek(startDate, validDates) {
             renderAliasLinks(textarea, aliasContainer);
         });
 
-        const wrapper = document.createElement('div');
-        wrapper.className = 'day-wrapper';
-
-        wrapper.appendChild(textarea);
-        wrapper.appendChild(aliasContainer);
-        dayDiv.appendChild(label);
-        dayDiv.appendChild(wrapper);
-
-        // Show/hide alias links vs textarea
+        // Toggle display based on content
         textarea.addEventListener('blur', () => {
-            renderAliasLinks(textarea, aliasContainer);
-            aliasContainer.style.display = 'block';
-            textarea.style.display = 'none';
+            if (markdownLinkRegex.test(textarea.value.trim())) {
+                aliasContainer.style.display = 'block';
+                textarea.style.display = 'none';
+            }
         });
 
         aliasContainer.addEventListener('click', () => {
@@ -92,6 +84,16 @@ function generateWeek(startDate, validDates) {
             textarea.focus();
         });
 
+        const wrapper = document.createElement('div');
+        wrapper.className = 'day-wrapper';
+        wrapper.appendChild(textarea);
+        wrapper.appendChild(aliasContainer);
+
+        dayDiv.appendChild(label);
+        dayDiv.appendChild(wrapper);
+        weekDiv.appendChild(dayDiv);
+
+        // Initial toggle
         if (markdownLinkRegex.test(textarea.value.trim())) {
             textarea.style.display = 'none';
             aliasContainer.style.display = 'block';
