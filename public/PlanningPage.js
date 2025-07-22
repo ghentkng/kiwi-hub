@@ -64,74 +64,82 @@ function applyLinkFormatting(div) {
     const temp = document.createElement('div');
     temp.innerHTML = div.innerHTML;
 
-    function recursivelyFormat(node) {
-        if (node.nodeType === Node.TEXT_NODE) {
-            const text = node.textContent;
+    const checklistRegex = /\{\}\(([^)]+)\)/g;
+    const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
 
-            // Check for checklist pattern: {}(text)
-            const checklistRegex = /\{\}\(([^)]+)\)/g;
-            const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+    function processTextNode(node) {
+        const text = node.textContent;
 
-            let match;
-            let currentIndex = 0;
-            const fragment = document.createDocumentFragment();
+        // Track all match replacements
+        const combinedRegex = new RegExp(`${checklistRegex.source}|${linkRegex.source}`, 'g');
+        let match;
+        let lastIndex = 0;
+        const fragment = document.createDocumentFragment();
 
-            while ((match = checklistRegex.exec(text)) !== null || (match = linkRegex.exec(text)) !== null) {
-                const matchIndex = match.index;
+        while ((match = combinedRegex.exec(text)) !== null) {
+            const matchText = match[0];
 
-                // Add preceding plain text
-                if (matchIndex > currentIndex) {
-                    fragment.appendChild(document.createTextNode(text.slice(currentIndex, matchIndex)));
-                }
-
-                if (match[0].startsWith('{}(')) {
-                    // Checklist
-                    const label = match[1];
-                    const wrapper = document.createElement('span');
-                    wrapper.className = 'checklist-item';
-
-                    const box = document.createElement('span');
-                    box.className = 'checkbox';
-                    box.textContent = '☐'; // unchecked box
-                    box.style.cursor = 'pointer';
-
-                    const content = document.createElement('span');
-                    content.className = 'checkbox-text';
-                    content.textContent = label;
-
-                    wrapper.appendChild(box);
-                    wrapper.appendChild(document.createTextNode(' '));
-                    wrapper.appendChild(content);
-                    fragment.appendChild(wrapper);
-                } else {
-                    // Link
-                    const [_, label, url] = match;
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.target = '_blank';
-                    link.rel = 'noopener noreferrer';
-                    link.textContent = label;
-                    fragment.appendChild(link);
-                    fragment.appendChild(document.createTextNode(' '));
-                }
-
-                currentIndex = match.index + match[0].length;
+            // Add plain text before match
+            if (match.index > lastIndex) {
+                fragment.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
             }
 
-            // Add any remaining text
-            if (currentIndex < text.length) {
-                fragment.appendChild(document.createTextNode(text.slice(currentIndex)));
+            if (matchText.startsWith('{}(')) {
+                const label = match[1];
+                const wrapper = document.createElement('span');
+                wrapper.className = 'checklist-item';
+
+                const box = document.createElement('span');
+                box.className = 'checkbox';
+                box.textContent = '☐';
+                box.style.cursor = 'pointer';
+
+                const content = document.createElement('span');
+                content.className = 'checkbox-text';
+                content.textContent = label;
+
+                wrapper.appendChild(box);
+                wrapper.appendChild(document.createTextNode(' '));
+                wrapper.appendChild(content);
+                fragment.appendChild(wrapper);
+            } else if (match[2] && match[3]) {
+                const label = match[2];
+                const url = match[3];
+                const link = document.createElement('a');
+                link.href = url;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.textContent = label;
+                fragment.appendChild(link);
+                fragment.appendChild(document.createTextNode(' '));
             }
 
-            if (fragment.childNodes.length > 0) {
-                node.replaceWith(fragment);
-            }
-        } else if (node.nodeType === Node.ELEMENT_NODE && node.tagName !== 'A' && node.tagName !== 'SPAN') {
-            [...node.childNodes].forEach(recursivelyFormat);
+            lastIndex = match.index + matchText.length;
+        }
+
+        // Add trailing plain text
+        if (lastIndex < text.length) {
+            fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
+        }
+
+        if (fragment.childNodes.length > 0) {
+            node.replaceWith(fragment);
         }
     }
 
-    [...temp.childNodes].forEach(recursivelyFormat);
+    function walk(node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+            processTextNode(node);
+        } else if (
+            node.nodeType === Node.ELEMENT_NODE &&
+            node.tagName !== 'A' &&
+            !node.classList.contains('checklist-item')
+        ) {
+            [...node.childNodes].forEach(walk);
+        }
+    }
+
+    [...temp.childNodes].forEach(walk);
 
     div.innerHTML = '';
     while (temp.firstChild) {
@@ -140,6 +148,7 @@ function applyLinkFormatting(div) {
 
     addCheckboxClickHandlers(div);
 }
+
 
 
 function moveCaretToEnd(el) {
