@@ -6,20 +6,22 @@ margin-top: 1rem;
 }
 
 .week {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 columns per row */
+    grid-auto-rows: auto;
     gap: 1em;
     margin-bottom: 2em;
 }
 
 .day {
-    flex: 1 0 calc(33% - 1em); /* roughly 3 per row */
     min-width: 200px;
 }
 
-.day:nth-child(4),
+.day:nth-child(4) {
+    grid-column: 1 / 2; /* Thursday starts new row */
+}
 .day:nth-child(5) {
-    flex: 1 0 calc(50% - 1em); /* 2 per row on second line */
+    grid-column: 2 / 3; /* Friday goes next to Thursday */
 }
 
 .day textarea {
