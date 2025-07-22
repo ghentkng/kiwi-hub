@@ -61,49 +61,53 @@ function formatLinksInEditable(div) {
 }
 
 function applyLinkFormatting(div) {
-    const text = div.innerText;
     const regex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
 
-    const fragments = [];
-    let lastIndex = 0;
+    // Use innerHTML to preserve tags like <br> and <a>
+    const html = div.innerHTML;
 
-    // Extract matches and build fragments
-    let match;
-    while ((match = regex.exec(text)) !== null) {
-        const [full, label, url] = match;
+    // Replace only raw markdown inside non-anchor nodes
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
 
-        // Add preceding plain text
-        if (match.index > lastIndex) {
-            fragments.push(document.createTextNode(text.slice(lastIndex, match.index)));
+    function recursivelyFormat(node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+            const match = regex.exec(node.textContent);
+            if (match) {
+                const [full, label, url] = match;
+                const before = node.textContent.slice(0, match.index);
+                const after = node.textContent.slice(match.index + full.length);
+
+                const fragment = document.createDocumentFragment();
+                if (before) fragment.appendChild(document.createTextNode(before));
+
+                const link = document.createElement('a');
+                link.href = url;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.textContent = label;
+                fragment.appendChild(link);
+
+                fragment.appendChild(document.createTextNode(' ')); // allow typing outside
+
+                if (after) fragment.appendChild(document.createTextNode(after));
+
+                node.replaceWith(fragment);
+            }
+        } else if (node.nodeType === Node.ELEMENT_NODE && node.tagName !== 'A') {
+            [...node.childNodes].forEach(recursivelyFormat);
         }
-
-        // Create the <a> element
-        const link = document.createElement('a');
-        link.href = url;
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        link.textContent = label;
-        fragments.push(link);
-
-        // Add a space node so caret can escape
-        fragments.push(document.createTextNode(' '));
-
-        lastIndex = match.index + full.length;
     }
 
-    // Add remaining text after last link
-    if (lastIndex < text.length) {
-        fragments.push(document.createTextNode(text.slice(lastIndex)));
-    }
+    [...temp.childNodes].forEach(recursivelyFormat);
 
-    // Rebuild div contents
+    // Replace content
     div.innerHTML = '';
-    for (const node of fragments) {
-        div.appendChild(node);
+    while (temp.firstChild) {
+        div.appendChild(temp.firstChild);
     }
-    moveCaretToEnd(div);
-
 }
+
 
 function moveCaretToEnd(el) {
     const range = document.createRange();
