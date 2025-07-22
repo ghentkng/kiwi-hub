@@ -215,6 +215,14 @@ app.get('/cs1planning', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'CS1Planning.html'));
 });
 
+app.get('/cs2planning', (req, res) => {
+    if (!req.session.loggedIn) {
+        req.session.redirectAfterLogin = '/cs2planning';
+        return res.redirect('/login');
+    }
+    res.sendFile(path.join(__dirname, 'public', 'CS2Planning.html'));
+});
+
 app.listen(PORT, () => {
 console.log(`Server running at http://localhost:${PORT}`);
 });
