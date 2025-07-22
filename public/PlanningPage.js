@@ -16,23 +16,36 @@ function formatDate(date) {
 }
 
 function formatLinksInEditable(div) {
-    const selection = window.getSelection();
-    const range = selection.getRangeAt(0);
-    const preCaretRange = range.cloneRange();
-    preCaretRange.selectNodeContents(div);
-    preCaretRange.setEnd(range.endContainer, range.endOffset);
-    const caretOffset = preCaretRange.toString().length;
+    try {
+        const selection = window.getSelection();
 
+        // Skip if no range or selection is outside the div
+        if (!selection.rangeCount || !div.contains(selection.anchorNode)) {
+            applyLinkFormatting(div);
+            return;
+        }
+
+        const range = selection.getRangeAt(0);
+        const preCaretRange = range.cloneRange();
+        preCaretRange.selectNodeContents(div);
+        preCaretRange.setEnd(range.endContainer, range.endOffset);
+        const caretOffset = preCaretRange.toString().length;
+
+        applyLinkFormatting(div);
+        setCaretPosition(div, caretOffset);
+    } catch (err) {
+        console.warn("formatLinksInEditable failed, falling back:", err);
+        applyLinkFormatting(div); // still apply formatting
+    }
+}
+
+function applyLinkFormatting(div) {
     const text = div.innerText;
     const regex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
     const html = text.replace(regex, (match, label, url) => {
         return `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
     });
-
     div.innerHTML = html;
-
-    // Restore caret
-    setCaretPosition(div, caretOffset);
 }
 
 function setCaretPosition(el, offset) {
@@ -64,6 +77,7 @@ function setCaretPosition(el, offset) {
         if (e !== 'done') throw e;
     }
 }
+
 
 
 
