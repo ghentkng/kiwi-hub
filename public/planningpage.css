@@ -40,7 +40,7 @@ html, body {
 }
 
 .day.complete {
-    background-color: #dfd;
+    background-color: rgb(248, 254, 254);
 }
 
 .day-toggle {
@@ -85,5 +85,5 @@ html, body {
 }
 
 button{
-    width: 50px;
+    width: 100px;
 }
