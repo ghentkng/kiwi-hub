@@ -223,6 +223,23 @@ app.get('/cs2planning', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'CS2Planning.html'));
 });
 
+
+app.get('/cs3planning', (req, res) => {
+    if (!req.session.loggedIn) {
+        req.session.redirectAfterLogin = '/cs3planning';
+        return res.redirect('/login');
+    }
+    res.sendFile(path.join(__dirname, 'public', 'CS3Planning.html'));
+});
+
+app.get('/apaplanning', (req, res) => {
+    if (!req.session.loggedIn) {
+        req.session.redirectAfterLogin = '/apaplanning';
+        return res.redirect('/login');
+    }
+    res.sendFile(path.join(__dirname, 'public', 'APAPlanning.html'));
+});
+
 app.listen(PORT, () => {
 console.log(`Server running at http://localhost:${PORT}`);
 });
