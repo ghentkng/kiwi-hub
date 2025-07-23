@@ -83,3 +83,7 @@ html, body {
     content: attr(placeholder);
     color: #aaa;
 }
+
+button{
+    width: 50px;
+}
