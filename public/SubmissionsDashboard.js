@@ -20,15 +20,15 @@ function closeModal() {
 document.getElementById('confirm-download').addEventListener('click', () => {
     const entered = document.getElementById('entered-code').value.trim();
     if (entered === expectedCode) {
-        fetch(`/download/${currentDownloadId}`, { method: 'POST' })
-        .then(res => res.text())
-        .then(msg => alert(msg))
-        .catch(err => alert('Error: ' + err));
+        if (confirm('Code correct. Do you want to download this submission?')) {
+            window.location.href = `/download/${currentDownloadId}?code=${entered}`;
+        }
         closeModal();
     } else {
         alert('Code does not match.');
     }
 });
+
 
 document.getElementById('archive-instead').addEventListener('click', () => {
     fetch(`/archive/${currentDownloadId}`, { method: 'POST' })
@@ -107,6 +107,7 @@ function renderTable() {
         <td>${sub.student_names}</td>
         <td>${sub.class_period}</td>
         <td>
+            <button onclick="downloadZip('${sub.file_name}')">Download</button>
             <button onclick="archiveSubmission('${sub.id}')">Archive</button>
         </td>
         `;
