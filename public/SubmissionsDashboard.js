@@ -7,8 +7,11 @@ function showCodeModal(id, studentName, code) {
     expectedCode = code;
     document.getElementById('modal-student-name').textContent =
         `Student: ${studentName}`;
+    document.getElementById('modal-code').textContent =
+        `One-Time Code: ${code}`;
     document.getElementById('codeModal').style.display = 'block';
 }
+
 
 function closeModal() {
     document.getElementById('codeModal').style.display = 'none';
@@ -102,7 +105,7 @@ function renderTable() {
         <td>${sub.student_names}</td>
         <td>${sub.class_period}</td>
         <td>
-            <button onclick="downloadZip('${sub.file_name}')">Download</button>
+            <button onclick="downloadZip('${sub.id}')">Download</button>
             <button onclick="archiveSubmission('${sub.id}')">Archive</button>
         </td>
         `;
@@ -123,13 +126,13 @@ window.archiveSubmission = function(id) {
 };
 
 
-window.downloadZip = function(file_name) {
-const submission = data.find(d => d.file_name === file_name);
-if (submission) {
-    showCodeModal(submission.id, submission.student_names, submission.code);
-} else {
-    alert("Submission not found.");
-}
+window.downloadZip = function(id) {
+    const submission = data.find(d => d.id === id);
+    if (submission) {
+        showCodeModal(submission.id, submission.student_names, submission.code);
+    } else {
+        alert("Submission not found.");
+    }
 }
 
     renderTable();
