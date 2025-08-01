@@ -7,7 +7,6 @@ function showCodeModal(id, studentName, code) {
     expectedCode = code;
     document.getElementById('modal-student-name').textContent =
         `Student: ${studentName}`;
-    document.getElementById('entered-code').value = '';
     document.getElementById('codeModal').style.display = 'block';
 }
 
@@ -18,15 +17,11 @@ function closeModal() {
 }
 
 document.getElementById('confirm-download').addEventListener('click', () => {
-    const entered = document.getElementById('entered-code').value.trim();
-    if (entered === expectedCode) {
-        if (confirm('Code correct. Do you want to download this submission?')) {
-            window.location.href = `/download/${currentDownloadId}?code=${entered}`;
-        }
-        closeModal();
-    } else {
-        alert('Code does not match.');
+    if (confirm('Proceed with download?')) {
+    window.location.href = `/download/${currentDownloadId}?code=${expectedCode}`;
     }
+    closeModal();
+
 });
 
 
