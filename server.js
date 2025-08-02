@@ -126,7 +126,7 @@ app.get('/download/:id', async (req, res) => {
         res.setHeader('Content-Type', 'application/zip');
         console.log('Buffer size at download:', submission.file_data ? submission.file_data.length : 'no buffer');
 
-        res.send(submission.file_data);
+        res.end(Buffer.from(submission.file_data), 'binary');
     } catch (err) {
         console.error(err);
         res.status(500).send('Database query failed');
