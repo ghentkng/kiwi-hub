@@ -127,7 +127,7 @@ window.archiveSubmission = function(id) {
 
 
 window.downloadZip = function(id) {
-    const submission = data.find(d => d.id === id);
+    const submission = data.find(d => String(d.id) === String(id));
     if (submission) {
         showCodeModal(submission.id, submission.student_names, submission.code);
     } else {
