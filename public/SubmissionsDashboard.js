@@ -49,6 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
     .then(res => res.json())
     .then(json => {
         data = json;
+        console.log('Submissions data loaded:', data); // check in console
         renderTable();
     })
     .catch(err => {

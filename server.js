@@ -130,7 +130,7 @@ app.post('/download/:id', async (req, res) => {
 
         if (!submission) return res.status(404).send('Submission not found');
 
-        const zipPath = path.join(__dirname, 'uploads', `${id}.zip`);
+        const zipPath = path.join(__dirname, 'uploads', submission.file_name);
         const extractPath = path.join(__dirname, 'unzipped', id);
 
         if (!fs.existsSync(zipPath)) return res.status(404).send('Zip file not found');
