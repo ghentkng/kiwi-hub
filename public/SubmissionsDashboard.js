@@ -117,7 +117,7 @@ window.archiveSubmission = function(id) {
     fetch(`/archive/${id}`, { method: 'POST' })
         .then(res => res.text())
         .then(msg => {
-            const item = data.find(d => d.id === id);
+            const item = data.find(d => String(d.id) === String(id));
             if (item) item.archived = true;
             renderTable();
         })

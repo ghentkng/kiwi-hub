@@ -133,6 +133,21 @@ app.get('/download/:id', async (req, res) => {
     }
 });
 
+app.post('/archive/:id', async (req, res) => {
+    if (!req.session.loggedIn) return res.status(403).send('Forbidden');
+    const { id } = req.params;
+
+    try {
+        await pool.query(
+            'UPDATE submissions SET archived = TRUE WHERE id = $1',
+            [id]
+        );
+        res.send('Submission archived');
+    } catch (err) {
+        console.error('Archive error:', err);
+        res.status(500).send('Failed to archive submission');
+    }
+});
 
 
 
