@@ -20,12 +20,10 @@ function closeModal() {
 }
 
 document.getElementById('confirm-download').addEventListener('click', () => {
-    if (confirm('Proceed with download?')) {
     window.location.href = `/download/${currentDownloadId}?code=${expectedCode}`;
-    }
     closeModal();
-
 });
+
 
 
 document.getElementById('archive-instead').addEventListener('click', () => {

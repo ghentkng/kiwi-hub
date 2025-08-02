@@ -119,39 +119,60 @@ req.session.destroy(() => {
 });
 });
 
-app.post('/download/:id', async (req, res) => {
+app.get('/download/:id', async (req, res) => {
     if (!req.session.loggedIn) return res.status(403).send('Forbidden');
 
     const { id } = req.params;
+    const { code } = req.query;
 
     try {
+        // Get submission by ID
         const { rows } = await pool.query('SELECT * FROM submissions WHERE id = $1', [id]);
         const submission = rows[0];
 
         if (!submission) return res.status(404).send('Submission not found');
 
+        // Validate code (optional — currently you're just displaying it, not checking)
+        if (submission.code !== code) {
+            return res.status(403).send('Invalid code');
+        }
+
+        // Path to uploaded file
         const zipPath = path.join(__dirname, 'uploads', submission.file_name);
-        const extractPath = path.join(__dirname, 'unzipped', id);
+        const extractPath = path.join(__dirname, 'unzipped', `${id}`);
 
-        if (!fs.existsSync(zipPath)) return res.status(404).send('Zip file not found');
+        if (!fs.existsSync(zipPath)) {
+            return res.status(404).send('Zip file not found');
+        }
 
+        // Ensure unzipped folder exists
+        if (!fs.existsSync(extractPath)) {
+            fs.mkdirSync(extractPath, { recursive: true });
+        }
+
+        // Unzip and open in VS Code
         fs.createReadStream(zipPath)
-        .pipe(unzipper.Extract({ path: extractPath }))
-        .on('close', () => {
-            exec(`code "${extractPath}"`, (err) => {
-            if (err) return res.status(500).send('Unzipped, but VS Code failed to open');
-            return res.send('Downloaded, unzipped, and opened in VS Code');
+            .pipe(unzipper.Extract({ path: extractPath }))
+            .on('close', () => {
+                exec(`code "${extractPath}"`, (err) => {
+                    if (err) {
+                        console.error(err);
+                        return res.status(500).send('Unzipped, but VS Code failed to open');
+                    }
+                    return res.send('Downloaded, unzipped, and opened in VS Code');
+                });
+            })
+            .on('error', err => {
+                console.error(err);
+                return res.status(500).send('Failed to unzip');
             });
-        })
-        .on('error', err => {
-            return res.status(500).send('Failed to unzip');
-        });
 
     } catch (err) {
         console.error(err);
         res.status(500).send('Database query failed');
     }
 });
+
 
 app.post('/submit', upload.single('zipFile'), async (req, res) => {
     const submission = {
