@@ -118,38 +118,16 @@ app.get('/download/:id', async (req, res) => {
         if (!submission) return res.status(404).send('Submission not found');
         if (submission.code !== code) return res.status(403).send('Invalid code');
 
-        // Create temp path for unzipping
-        const extractPath = path.join(__dirname, 'unzipped', `${id}`);
-        if (!fs.existsSync(extractPath)) fs.mkdirSync(extractPath, { recursive: true });
-
-        // Write buffer to a temp zip file
-        const tempZipPath = path.join(__dirname, `${id}.zip`);
-        fs.writeFileSync(tempZipPath, submission.file_data);
-
-        // Unzip and open in VS Code
-        fs.createReadStream(tempZipPath)
-            .pipe(unzipper.Extract({ path: extractPath }))
-            .on('close', () => {
-                fs.unlinkSync(tempZipPath); // cleanup temp zip
-
-                exec(`code "${extractPath}"`, (err) => {
-                    if (err) {
-                        console.error(err);
-                        return res.status(500).send('Unzipped, but VS Code failed to open');
-                    }
-                    return res.send('Downloaded, unzipped, and opened in VS Code');
-                });
-            })
-            .on('error', err => {
-                console.error(err);
-                return res.status(500).send('Failed to unzip');
-            });
-
+        // Send the zip file from file_data in DB
+        res.setHeader('Content-Disposition', `attachment; filename=submission-${id}.zip`);
+        res.setHeader('Content-Type', 'application/zip');
+        res.send(submission.file_data);
     } catch (err) {
         console.error(err);
         res.status(500).send('Database query failed');
     }
 });
+
 
 
 
