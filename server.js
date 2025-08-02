@@ -5,16 +5,7 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 const multer = require('multer');
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/');
-    },
-    filename: (req, file, cb) => {
-        const id = Date.now().toString();
-        req.body.submissionId = id;
-        cb(null, `${id}.zip`);
-    }
-});
+const storage = multer.memoryStorage();
 
 const upload = multer({ storage: storage });
 
@@ -54,33 +45,28 @@ res.sendFile(path.join(__dirname, 'public', 'StudentSubmit.html'));
 
 
 app.post('/submit', upload.single('zipFile'), async (req, res) => {
-    const submission = {
-        student_names: req.body.studentNames,
-        class_period: req.body.classPeriod,
-        assignment_name: req.body.assignmentName,
-        code: req.body.code,
-        file_name: req.file ? req.file.filename : null
-    };
-
     try {
         await pool.query(
-        `INSERT INTO submissions 
-        (student_names, class_period, assignment_name, code, file_name) 
-        VALUES ($1, $2, $3, $4, $5)`,
-        [
-            submission.student_names,
-            submission.class_period,
-            submission.assignment_name,
-            submission.code,
-            submission.file_name
-        ]
+            `INSERT INTO submissions 
+            (student_names, class_period, assignment_name, code, file_data, archived)
+            VALUES ($1, $2, $3, $4, $5, $6)`,
+            [
+                req.body.studentNames,
+                req.body.classPeriod,
+                req.body.assignmentName,
+                req.body.code,
+                req.file.buffer, // direct from memory
+                false
+            ]
         );
+
         res.status(200).send('Thank you for your submission!');
     } catch (err) {
         console.error('DB insert error:', err);
         res.status(500).send('Error saving submission.');
     }
 });
+
 
 
 
@@ -126,34 +112,26 @@ app.get('/download/:id', async (req, res) => {
     const { code } = req.query;
 
     try {
-        // Get submission by ID
         const { rows } = await pool.query('SELECT * FROM submissions WHERE id = $1', [id]);
         const submission = rows[0];
 
         if (!submission) return res.status(404).send('Submission not found');
+        if (submission.code !== code) return res.status(403).send('Invalid code');
 
-        // Validate code (optional — currently you're just displaying it, not checking)
-        if (submission.code !== code) {
-            return res.status(403).send('Invalid code');
-        }
-
-        // Path to uploaded file
-        const zipPath = path.join(__dirname, 'uploads', submission.file_name);
+        // Create temp path for unzipping
         const extractPath = path.join(__dirname, 'unzipped', `${id}`);
+        if (!fs.existsSync(extractPath)) fs.mkdirSync(extractPath, { recursive: true });
 
-        if (!fs.existsSync(zipPath)) {
-            return res.status(404).send('Zip file not found');
-        }
-
-        // Ensure unzipped folder exists
-        if (!fs.existsSync(extractPath)) {
-            fs.mkdirSync(extractPath, { recursive: true });
-        }
+        // Write buffer to a temp zip file
+        const tempZipPath = path.join(__dirname, `${id}.zip`);
+        fs.writeFileSync(tempZipPath, submission.file_data);
 
         // Unzip and open in VS Code
-        fs.createReadStream(zipPath)
+        fs.createReadStream(tempZipPath)
             .pipe(unzipper.Extract({ path: extractPath }))
             .on('close', () => {
+                fs.unlinkSync(tempZipPath); // cleanup temp zip
+
                 exec(`code "${extractPath}"`, (err) => {
                     if (err) {
                         console.error(err);
@@ -174,30 +152,24 @@ app.get('/download/:id', async (req, res) => {
 });
 
 
-app.post('/submit', upload.single('zipFile'), async (req, res) => {
-    const submission = {
-        student_names: req.body.studentNames,
-        class_period: req.body.classPeriod,
-        assignment_name: req.body.assignmentName,
-        code: req.body.code,
-        file_name: req.file ? req.file.filename : null,
-        archived: false
-    };
 
+app.post('/submit', upload.single('zipFile'), async (req, res) => {
     try {
+
         await pool.query(
             `INSERT INTO submissions 
-            (student_names, class_period, assignment_name, code, file_name, archived) 
+            (student_names, class_period, assignment_name, code, file_data, archived)
             VALUES ($1, $2, $3, $4, $5, $6)`,
             [
-                submission.student_names,
-                submission.class_period,
-                submission.assignment_name,
-                submission.code,
-                submission.file_name,
-                submission.archived
+                req.body.studentNames,
+                req.body.classPeriod,
+                req.body.assignmentName,
+                req.body.code,
+                fileBuffer,
+                false
             ]
         );
+
         res.status(200).send('Thank you for your submission!');
     } catch (err) {
         console.error('DB insert error:', err);
@@ -208,12 +180,15 @@ app.post('/submit', upload.single('zipFile'), async (req, res) => {
 
 
 
+
 app.get('/submissions-data', async (req, res) => {
     if (!req.session.loggedIn) return res.status(403).send('Forbidden');
 
     try {
-        const result = await pool.query('SELECT * FROM submissions');
-        res.json(result.rows);
+        const result = await pool.query('SELECT id, student_names, class_period, assignment_name, code, archived, timestamp FROM submissions'
+);
+res.json(result.rows);
+
     } catch (err) {
         console.error('DB read error:', err);
         res.status(500).send('Failed to load submissions');
