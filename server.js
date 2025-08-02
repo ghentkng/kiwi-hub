@@ -46,6 +46,9 @@ res.sendFile(path.join(__dirname, 'public', 'StudentSubmit.html'));
 
 app.post('/submit', upload.single('zipFile'), async (req, res) => {
     try {
+        console.log('File received:', req.file ? 'yes' : 'no');
+        console.log('Buffer size at upload:', req.file ? req.file.buffer.length : 'no buffer');
+
         await pool.query(
             `INSERT INTO submissions 
             (student_names, class_period, assignment_name, code, file_data, archived)
@@ -121,6 +124,8 @@ app.get('/download/:id', async (req, res) => {
         // Send the zip file from file_data in DB
         res.setHeader('Content-Disposition', `attachment; filename=submission-${id}.zip`);
         res.setHeader('Content-Type', 'application/zip');
+        console.log('Buffer size at download:', submission.file_data ? submission.file_data.length : 'no buffer');
+
         res.send(submission.file_data);
     } catch (err) {
         console.error(err);
