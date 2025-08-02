@@ -1,1 +1,1 @@
-ALTER TABLE submissions DROP COLUMN file_name;
+ALTER TABLE submissions ADD COLUMN file_data BYTEA;

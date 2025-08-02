@@ -131,34 +131,6 @@ app.get('/download/:id', async (req, res) => {
 
 
 
-app.post('/submit', upload.single('zipFile'), async (req, res) => {
-    try {
-
-        await pool.query(
-            `INSERT INTO submissions 
-            (student_names, class_period, assignment_name, code, file_data, archived)
-            VALUES ($1, $2, $3, $4, $5, $6)`,
-            [
-                req.body.studentNames,
-                req.body.classPeriod,
-                req.body.assignmentName,
-                req.body.code,
-                fileBuffer,
-                false
-            ]
-        );
-
-        res.status(200).send('Thank you for your submission!');
-    } catch (err) {
-        console.error('DB insert error:', err);
-        res.status(500).send('Error saving submission.');
-    }
-});
-
-
-
-
-
 app.get('/submissions-data', async (req, res) => {
     if (!req.session.loggedIn) return res.status(403).send('Forbidden');
 
