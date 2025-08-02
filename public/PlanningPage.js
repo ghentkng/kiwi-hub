@@ -7,10 +7,6 @@ function getMonday(date) {
 
 const calendarNamespace = document.body.dataset.page || 'default';
 
-function getStorageKey(dateStr) {
-    return `calendar_notes_${calendarNamespace}_${dateStr}`;
-}
-
 function formatDate(date) {
     return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
 }
@@ -284,24 +280,6 @@ function generateWeek(startDate, validDates) {
     return weekDiv;
 }
 
-
-function cleanupOldNotes(validDates = []) {
-    const prefix = `calendar_notes_${calendarNamespace}_`;
-    const keysToDelete = [];
-
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith(prefix)) {
-            const datePart = key.slice(prefix.length);
-            if (!validDates.includes(datePart)) {
-                keysToDelete.push(key);
-            }
-        }
-    }
-
-    keysToDelete.forEach(key => localStorage.removeItem(key));
-}
-
 function addCheckboxClickHandlers(div) {
     div.querySelectorAll('.checkbox').forEach(box => {
         box.onclick = () => {
@@ -338,7 +316,6 @@ function renderCalendar() {
         container.appendChild(weekDiv);
     }
 
-    cleanupOldNotes(validDates);
     loadNotesFromServer(pageName);
 }
 
