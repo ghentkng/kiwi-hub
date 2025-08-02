@@ -1,1 +1,1 @@
-ALTER TABLE submissions ADD COLUMN file_data BYTEA;
+ALTER TABLE planning_notes ADD COLUMN complete BOOLEAN DEFAULT false;

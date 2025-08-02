@@ -209,67 +209,75 @@ function generateWeek(startDate, validDates) {
     weekDiv.className = 'week';
 
     for (let i = 0; i < 5; i++) {
+        // Calculate this day's date
         const dayDate = new Date(startDate);
         dayDate.setDate(dayDate.getDate() + i);
         const dateStr = dayDate.toISOString().split('T')[0];
         validDates.push(dateStr);
 
+        // Create day container
         const dayDiv = document.createElement('div');
-        dayDiv.className = 'day';
+        dayDiv.classList.add('day');
+        dayDiv.dataset.date = dateStr;
 
+        // Add label (Mon, Aug 1, etc.)
         const label = document.createElement('div');
         label.textContent = formatDate(dayDate);
         label.style.fontWeight = 'bold';
         label.style.marginBottom = '0.5em';
 
+        // Create editable note area
         const textarea = document.createElement('div');
         textarea.contentEditable = true;
         textarea.className = 'calendar-note';
         textarea.setAttribute('data-date', dateStr);
-        textarea.innerHTML = localStorage.getItem(getStorageKey(dateStr)) || '';
-        formatLinksInEditable(textarea); // 💡 apply inline links on load
+        textarea.innerHTML = ''; // Will be populated by loadNotesFromServer()
 
+        // Save notes on input
         textarea.addEventListener('input', () => {
-            formatLinksInEditable(textarea); // 💡 format while typing
-            localStorage.setItem(getStorageKey(dateStr), textarea.innerHTML);
+            formatLinksInEditable(textarea); // Format links as you type
+            saveNoteToServer(pageName, dateStr, textarea.innerHTML);
         });
 
+        // Handle Enter key for line breaks
         textarea.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
-                e.preventDefault(); // prevent default newline
-                insertLineBreak();  // insert controlled line break
+                e.preventDefault(); // Prevent default newline
+                insertLineBreak();  // Insert controlled line break
             }
         });
 
-
+        // Wrap textarea
         const wrapper = document.createElement('div');
         wrapper.className = 'day-wrapper';
         wrapper.appendChild(textarea);
 
+        // Add everything to dayDiv
         dayDiv.appendChild(label);
         dayDiv.appendChild(wrapper);
+
+        // Add checkbox for completion state
         const dayToggle = document.createElement('input');
         dayToggle.type = 'checkbox';
         dayToggle.className = 'day-toggle';
 
-        // Load checkbox state from localStorage
-        const dayKey = `calendar_day_state_${calendarNamespace}_${dateStr}`;
-        const isChecked = localStorage.getItem(dayKey) === 'true';
-        dayToggle.checked = isChecked;
-        if (isChecked) dayDiv.classList.add('complete');
+        // Checkbox state will be set later by loadNotesFromServer()
 
+        // Save checkbox state when changed
         dayToggle.addEventListener('change', () => {
-            if (dayToggle.checked) {
+            const isChecked = dayToggle.checked;
+
+            if (isChecked) {
                 dayDiv.classList.add('complete');
-                localStorage.setItem(dayKey, 'true');
             } else {
                 dayDiv.classList.remove('complete');
-                localStorage.setItem(dayKey, 'false');
             }
+
+            // Save state AND current note content to DB
+            saveNoteToServer(pageName, dateStr, textarea.innerHTML, isChecked);
         });
 
         dayDiv.appendChild(dayToggle);
-
         weekDiv.appendChild(dayDiv);
     }
 
@@ -331,6 +339,7 @@ function renderCalendar() {
     }
 
     cleanupOldNotes(validDates);
+    loadNotesFromServer(pageName);
 }
 
 document.addEventListener('DOMContentLoaded', renderCalendar);
@@ -351,5 +360,55 @@ document.addEventListener('click', (e) => {
             editable.contentEditable = 'true';
         }, 100);
     }
+});
+
+const pageName = document.body.dataset.page;
+async function loadNotesFromServer(pageName) {
+    const res = await fetch(`/planning-notes/${pageName}`);
+    const notes = await res.json();
+
+    notes.forEach(note => {
+        const dayBox = document.querySelector(`[data-date="${note.date_key}"]`);
+        if (dayBox) {
+            // Update note content
+            const textarea = dayBox.querySelector('.calendar-note');
+            if (textarea) {
+                textarea.innerHTML = note.content || '';
+            }
+
+            // Update checkbox state
+            const dayToggle = dayBox.querySelector('.day-toggle');
+            if (dayToggle) {
+                dayToggle.checked = note.complete;
+                if (note.complete) {
+                    dayBox.classList.add('complete');
+                } else {
+                    dayBox.classList.remove('complete');
+                }
+            }
+        }
+    });
+}
+
+
+async function saveNoteToServer(pageName, dateKey, content, complete = false) {
+    await fetch('/planning-notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            page_name: pageName,
+            date_key: dateKey,
+            content: content,
+            complete: complete
+        })
+    });
+}
+
+
+document.querySelectorAll('.day textarea').forEach(textarea => {
+    textarea.addEventListener('input', () => {
+        const dateKey = textarea.closest('.day').dataset.date;
+        saveNoteToServer(pageName, dateKey, textarea.value);
+    });
 });
 

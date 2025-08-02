@@ -206,6 +206,48 @@ app.get('/apaplanning', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'APAPlanning.html'));
 });
 
+app.get('/planning-notes/:page', async (req, res) => {
+    if (!req.session.loggedIn) return res.status(403).send('Forbidden');
+    const { page } = req.params;
+
+    try {
+        const { rows } = await pool.query(
+            'SELECT date_key, content, complete FROM planning_notes WHERE page_name = $1',
+            [page]
+        );
+        res.json(rows);
+    } catch (err) {
+        console.error('Error fetching notes:', err);
+        res.status(500).send('Error fetching notes');
+    }
+});
+
+
+app.post('/planning-notes', async (req, res) => {
+    if (!req.session.loggedIn) return res.status(403).send('Forbidden');
+    const { page_name, date_key, content, complete } = req.body;
+
+    try {
+        await pool.query(
+            `INSERT INTO planning_notes (page_name, date_key, content, complete)
+            VALUES ($1, $2, $3, $4)
+            ON CONFLICT (page_name, date_key)
+            DO UPDATE SET 
+                content = EXCLUDED.content,
+                complete = EXCLUDED.complete,
+                updated_at = CURRENT_TIMESTAMP`,
+            [page_name, date_key, content, complete]
+        );
+        res.send('Note saved');
+    } catch (err) {
+        console.error('Error saving note:', err);
+        res.status(500).send('Error saving note');
+    }
+});
+
+
+
+
 app.listen(PORT, () => {
 console.log(`Server running at http://localhost:${PORT}`);
 });
