@@ -390,8 +390,10 @@ document.querySelectorAll('.day textarea').forEach(textarea => {
 });
 
 document.getElementById('manage-playlists-btn').addEventListener('click', () => {
-    window.open(`/manage-playlists?page=${pageName}`, 'ManagePlaylists', 'width=600,height=400');
+    document.getElementById('playlist-modal').style.display = 'block';
+    loadPlaylistManagement();
 });
+
 
 const manageBtn = document.getElementById('manage-playlists-btn');
 const playlistModal = document.getElementById('playlist-modal');
@@ -535,3 +537,8 @@ async function loadPlaylistManagement() {
         container.appendChild(section);
     });
 }
+
+document.getElementById('close-playlist-modal').addEventListener('click', () => {
+    document.getElementById('playlist-modal').style.display = 'none';
+});
+
