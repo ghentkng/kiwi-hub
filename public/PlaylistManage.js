@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const res = await fetch(`/playlists/${pageName}`);
         const playlists = await res.json();
+        console.log('Loaded playlists:', playlists);
+
 
         // Group playlists by button_name
         const buttons = ['Button1', 'Button2', 'Button3'];
