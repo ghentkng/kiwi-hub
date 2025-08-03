@@ -381,3 +381,10 @@ app.listen(PORT, () => {
 console.log(`Server running at http://localhost:${PORT}`);
 });
 
+app.get('/playlist-popup', (req, res) => {
+    if (!req.session.loggedIn) {
+        req.session.redirectAfterLogin = '/playlist-popup';
+        return res.redirect('/login');
+    }
+    res.sendFile(path.join(__dirname, 'public', 'playlist-popup.html'));
+});

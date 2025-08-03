@@ -381,164 +381,49 @@ async function saveNoteToServer(pageName, dateKey, content, complete = false) {
     });
 }
 
-
-document.querySelectorAll('.day textarea').forEach(textarea => {
-    textarea.addEventListener('input', () => {
-        const dateKey = textarea.closest('.day').dataset.date;
-        saveNoteToServer(pageName, dateKey, textarea.value);
-    });
-});
-
 document.getElementById('manage-playlists-btn').addEventListener('click', () => {
-    document.getElementById('playlist-modal').style.display = 'block';
-    loadPlaylistManagement();
+    window.open(`/playlist-popup?page=${pageName}`, 'PlaylistPopup', 'width=600,height=400');
 });
 
-
-const manageBtn = document.getElementById('manage-playlists-btn');
-const playlistModal = document.getElementById('playlist-modal');
-const closePlaylistModal = document.getElementById('close-playlist-modal');
-
-manageBtn.addEventListener('click', () => {
-    playlistModal.style.display = 'block';
-    loadPlaylistManagement();
-});
-
-closePlaylistModal.addEventListener('click', () => {
-    playlistModal.style.display = 'none';
-});
-
-async function loadPlaylistManagement() {
-    const container = document.getElementById('playlist-management');
-    container.innerHTML = 'Loading...';
-
+async function loadPlaylistButtons() {
     const res = await fetch(`/playlists/${pageName}`);
     const playlists = await res.json();
 
     // Group playlists by button_name
-    const grouped = { Button1: [], Button2: [], Button3: [] };
+    const grouped = {};
     playlists.forEach(pl => {
-        if (grouped[pl.button_name] !== undefined) {
-            grouped[pl.button_name].push(pl);
+        if (!grouped[pl.button_name]) {
+            grouped[pl.button_name] = { display_name: pl.display_name, items: [] };
         }
+        grouped[pl.button_name].items.push(pl);
     });
 
-    // Clear container
+    const container = document.getElementById('playlist-buttons-container');
     container.innerHTML = '';
 
-    // Render sections for each button
     Object.keys(grouped).forEach(buttonName => {
-        const buttonPlaylists = grouped[buttonName];
-        const displayName = buttonPlaylists[0]?.display_name || '';
+        const buttonInfo = grouped[buttonName];
 
-        // Section wrapper
-        const section = document.createElement('div');
-        section.style.marginBottom = '1em';
-
-        // Display name input
-        const displayInput = document.createElement('input');
-        displayInput.type = 'text';
-        displayInput.value = displayName;
-        displayInput.placeholder = 'Button Display Name';
-        displayInput.addEventListener('change', async () => {
-            await fetch(`/playlists/${pageName}/manage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'setDisplayName',
-                    button_name: buttonName,
-                    display_name: displayInput.value
-                })
-            });
-            loadPlaylistButtons(); // refresh play buttons
-        });
-        section.appendChild(displayInput);
-
-        // Playlist list
-        const list = document.createElement('ul');
-        buttonPlaylists.forEach(pl => {
-            const li = document.createElement('li');
-
-            const nameInput = document.createElement('input');
-            nameInput.type = 'text';
-            nameInput.value = pl.name;
-            nameInput.placeholder = 'Playlist Name';
-
-            const urlInput = document.createElement('input');
-            urlInput.type = 'text';
-            urlInput.value = pl.url;
-            urlInput.placeholder = 'YouTube URL';
-
-            const saveBtn = document.createElement('button');
-            saveBtn.textContent = 'Save';
-            saveBtn.addEventListener('click', async () => {
-                await fetch(`/playlists/${pageName}/manage`, {
+        // Only render button if it has playlists
+        if (buttonInfo.items.length > 0) {
+            const btn = document.createElement('button');
+            btn.textContent = buttonInfo.display_name || buttonName;
+            btn.addEventListener('click', async () => {
+                const res = await fetch(`/playlists/${pageName}/play`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'update',
-                        button_name: buttonName,
-                        playlist: {
-                            id: pl.id,
-                            name: nameInput.value,
-                            url: urlInput.value
-                        }
-                    })
+                    body: JSON.stringify({ button_name: buttonName })
                 });
-                loadPlaylistButtons();
+                const data = await res.json();
+                if (data.url) {
+                    window.open(data.url, '_blank'); // Open playlist in new tab
+                } else {
+                    alert('No playlist URL found.');
+                }
             });
-
-            const delBtn = document.createElement('button');
-            delBtn.textContent = 'Delete';
-            delBtn.addEventListener('click', async () => {
-                await fetch(`/playlists/${pageName}/manage`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'delete',
-                        button_name: buttonName,
-                        playlist: { id: pl.id }
-                    })
-                });
-                loadPlaylistManagement();
-                loadPlaylistButtons();
-            });
-
-            li.appendChild(nameInput);
-            li.appendChild(urlInput);
-            li.appendChild(saveBtn);
-            li.appendChild(delBtn);
-            list.appendChild(li);
-        });
-        section.appendChild(list);
-
-        // Add new playlist
-        const addBtn = document.createElement('button');
-        addBtn.textContent = 'Add Playlist';
-        addBtn.addEventListener('click', async () => {
-            await fetch(`/playlists/${pageName}/manage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'add',
-                    button_name: buttonName,
-                    display_name: displayInput.value,
-                    playlist: {
-                        name: 'New Playlist',
-                        url: ''
-                    }
-                })
-            });
-            loadPlaylistManagement();
-            loadPlaylistButtons();
-        });
-        section.appendChild(addBtn);
-
-        container.appendChild(section);
+            container.appendChild(btn);
+        }
     });
 }
 
-document.getElementById('close-playlist-modal').addEventListener('click', () => {
-    document.getElementById('playlist-modal').style.display = 'none';
-});
-
+document.addEventListener('DOMContentLoaded', loadPlaylistButtons);
