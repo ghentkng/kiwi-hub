@@ -1,3 +1,5 @@
+console.log('PlaylistManage.js loaded');
+
 document.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(window.location.search);
     const pageName = params.get('page'); // e.g., cs1planning
