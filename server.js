@@ -386,5 +386,5 @@ app.get('/playlist-popup', (req, res) => {
         req.session.redirectAfterLogin = '/playlist-popup';
         return res.redirect('/login');
     }
-    res.sendFile(path.join(__dirname, 'public', 'PlaylistMange.html'));
+    res.sendFile(path.join(__dirname, 'public', 'PlaylistManage.html'));
 });
