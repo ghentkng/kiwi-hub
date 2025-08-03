@@ -1,3 +1,4 @@
+alert('PlaylistManage.js loaded');
 console.log('PlaylistManage.js loaded');
 
 document.addEventListener('DOMContentLoaded', () => {
