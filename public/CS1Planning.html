@@ -13,23 +13,34 @@
     <div id="page-wrapper">
 
     <h1>&Tab;CS1 Planning</h1>
-<div id="slides-container" style="margin-bottom: 20px;">
-    <iframe src="https://docs.google.com/presentation/d/1VXDQH-5dzvJXpEGHMik86Oodt0_4PpOFWSVZqdsF4IA/edit?usp=sharing" frameborder="0" width="960" height="569" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"
-    frameborder="0" 
-        width="960" 
-        height="569" 
-        allowfullscreen
-        title="CS1 Calendar">
-    </iframe>
-</div>
 
-<div id="button-container">
-    <a href="https://codehs.com/app/roster/section/717869"><button type="button">CodeHS</button></a>
-    <a href="https://drive.google.com/drive/u/0/folders/1LoXsYZE9XmZCoR_cxGc2UE1OwV0hUsmT"></a><button type="button">Google Drive</button></a>
-    <a href="https://classroom.google.com/c/Nzg5ODU1MzUyMDI3"></a><button type="button">Google Classroom</button></a>
-</div>
+    <button id="manage-playlists-btn">Manage Playlists</button>
+
+    <div id="slides-container" style="margin-bottom: 20px;">
+        <iframe src="https://docs.google.com/presentation/d/1VXDQH-5dzvJXpEGHMik86Oodt0_4PpOFWSVZqdsF4IA/edit?usp=sharing" frameborder="0" width="960" height="569" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"
+        frameborder="0" 
+            width="960" 
+            height="569" 
+            allowfullscreen
+            title="CS1 Calendar">
+        </iframe>
+    </div>
+
+    <div id="button-container">
+        <a href="https://codehs.com/app/roster/section/717869"><button type="button">CodeHS</button></a>
+        <a href="https://drive.google.com/drive/u/0/folders/1LoXsYZE9XmZCoR_cxGc2UE1OwV0hUsmT"></a><button type="button">Google Drive</button></a>
+        <a href="https://classroom.google.com/c/Nzg5ODU1MzUyMDI3"></a><button type="button">Google Classroom</button></a>
+    </div>
 
     <div id="calendar-container"></div>
+    </div>
+
+        <div id="playlist-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <h3>Manage Playlists</h3>
+            <div id="playlist-management"></div>
+            <button id="close-playlist-modal">Close</button>
+        </div>
     </div>
 </body>
 <script src="PlanningPage.js"></script>
