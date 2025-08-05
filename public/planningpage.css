@@ -88,12 +88,17 @@ button{
     width: 100px;
 }
 
+#playlist-wrapper {
+    display: flex;
+    gap: 10px;        /* space between manage button and playlist buttons */
+    flex-wrap: nowrap;
+    margin-bottom: 10px;
+}
+
 /* Container: align buttons horizontally with spacing */
 #playlist-buttons-container {
     display: flex;
     gap: 10px;          /* space between buttons */
-    flex-wrap: nowrap;  /* keep on one row (wrap if needed by screen width) */
-    margin-bottom: 10px;
 }
 
 /* Style for all playlist buttons */
@@ -125,21 +130,3 @@ button{
     min-width: 120px;
 }
 
-#playlist-buttons-container button,
-.manage-playlists-btn {
-    background-color: #5c8f79;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    padding: 10px 16px;
-    font-size: 1rem;
-    line-height: 1.2;
-    cursor: pointer;
-    white-space: nowrap;
-    height: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 100px;
-    margin-right: 10px; /* spacing from playlist buttons */
-}
