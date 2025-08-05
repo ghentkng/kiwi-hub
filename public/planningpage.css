@@ -124,3 +124,22 @@ button{
 .manage-playlists-btn {
     min-width: 120px;
 }
+
+#playlist-buttons-container button,
+.manage-playlists-btn {
+    background-color: #5c8f79;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 16px;
+    font-size: 1rem;
+    line-height: 1.2;
+    cursor: pointer;
+    white-space: nowrap;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 100px;
+    margin-right: 10px; /* spacing from playlist buttons */
+}
