@@ -22,7 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Group playlists by button_name
         const buttons = ['Button1', 'Button2', 'Button3'];
-        const buttons = ['Button1', 'Button2', 'Button3'];
 const grouped = {};
 buttons.forEach(b => grouped[b] = []);
 
@@ -157,9 +156,6 @@ buttons.forEach(buttonName => {
 });
 
     }
-
-    window.loadPlaylistButtons = loadPlaylistButtons;
-
 
     loadPlaylists();
 });
