@@ -351,6 +351,7 @@ async function loadNotesFromServer(pageName) {
             const textarea = dayBox.querySelector('.calendar-note');
             if (textarea) {
                 textarea.innerHTML = note.content || '';
+                formatLinksInEditable(textarea); // reapply formatting and checkbox click events
             }
 
             // Update checkbox state
