@@ -1,4 +1,11 @@
-input[type="checkbox"], label {
-display: inline;
-vertical-align: left;
+input[type="checkbox"] {
+  width: auto; /* override 100% */
+    display: inline-block;
+    vertical-align: middle;
+}
+
+label {
+  display: inline-block; /* override block */
+    margin-top: 0;
+    vertical-align: middle;
 }
