@@ -206,6 +206,14 @@ app.get('/apaplanning', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'APAPlanning.html'));
 });
 
+app.get('/reference', (req, res) => {
+    if (!req.session.loggedIn) {
+        req.session.redirectAfterLogin = '/reference';
+        return res.redirect('/login');
+    }
+    res.sendFile(path.join(__dirname, 'public', 'Reference.html'));
+});
+
 app.get('/planning-notes/:page', async (req, res) => {
     if (!req.session.loggedIn) return res.status(403).send('Forbidden');
     const { page } = req.params;
