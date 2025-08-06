@@ -1,4 +1,4 @@
 input[type="checkbox"], label {
 display: inline-block;
-vertical-align: middle;
+vertical-align: left;
 }
