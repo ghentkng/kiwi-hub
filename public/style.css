@@ -29,9 +29,8 @@
 }
 
 .title-logo {
-    height: 1em;
+    height: 1.2em; /* slightly taller than the text */
     width: auto;
-    vertical-align: middle;
 }
 
 body {
