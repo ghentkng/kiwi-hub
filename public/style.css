@@ -22,18 +22,21 @@
     font-display: swap;
 }
 
-.title-logo {
-    height: 48px; /* matches h1 text height exactly */
-    width: auto;
-    position: relative;
-    margin-top: -4;
-    top: 0;
-}
-
 .title-container {
     display: flex;
-    align-items: flex-start; /* align tops */
-    gap: 10px;
+  align-items: flex-start; /* top-align */
+    gap: 12px;
+}
+
+.title-container h1 {
+  margin: 0;           /* <-- remove default h1 margins */
+  line-height: 1.1;    /* optional: tighten line box */
+}
+
+.title-logo {
+  height: 48px;        /* whatever size you chose */
+    width: auto;
+  display: block;      /* avoid extra inline gap */
 }
 
 body {
