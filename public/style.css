@@ -1,13 +1,5 @@
 @font-face {
     font-family: 'Mont';
-    src: url('assets/fonts/Mont-ExtraLightDEMO.otf') format('opentype');
-    font-weight: 200;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: 'Mont';
     src: url('assets/fonts/Mont-HeavyDEMO.otf') format('opentype');
     font-weight: 900;
     font-style: normal;
@@ -36,6 +28,12 @@ body {
     margin: 40px;
     max-width: 600px;
     background-color: #bae3ca;
+}
+
+h1, h2, h3 { 
+    font-family: 'Mont', sans-serif; 
+    font-weight: 200;            /* ExtraLight */
+    font-synthesis-weight: none; /* don’t fake bold */
 }
 
 label {
