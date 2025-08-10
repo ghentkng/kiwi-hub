@@ -25,6 +25,8 @@
 .title-logo {
     height: 48px; /* matches h1 text height exactly */
     width: auto;
+    position: relative;
+    top: 0;
 }
 
 .title-container {
