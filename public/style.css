@@ -23,9 +23,10 @@
 }
 
 .title-logo {
-    height: 100%;
+    height: 48px; /* matches h1 text height exactly */
     width: auto;
 }
+
 .title-container {
     display: flex;
     align-items: stretch; /* image stretches to heading’s line height */
