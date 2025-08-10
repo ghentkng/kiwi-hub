@@ -16,7 +16,7 @@
 
 @font-face {
     font-family: 'Mont';
-    src: url('/assets/fonts/Mont-HeavyDEMO.otf') format('opentype');
+    src: url('../assets/fonts/Mont-HeavyDEMO.otf') format('opentype');
     font-weight: 700; /* mapped to heavy source */
     font-style: normal;
     font-display: swap;
