@@ -29,7 +29,8 @@
 
 .title-container {
     display: flex;
-    align-items: stretch; /* image stretches to heading’s line height */
+    align-items: flex-start; /* align tops */
+    gap: 10px;
 }
 
 body {
