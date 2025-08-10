@@ -22,15 +22,13 @@
     font-display: swap;
 }
 
+.title-logo {
+    height: 100%;
+    width: auto;
+}
 .title-container {
     display: flex;
-    align-items: center; /* vertical alignment */
-    gap: 10px; /* space between image and text */
-}
-
-.title-logo {
-    height: 1.2em; /* slightly taller than the text */
-    width: auto;
+    align-items: stretch; /* image stretches to heading’s line height */
 }
 
 body {
