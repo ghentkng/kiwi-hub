@@ -1,5 +1,19 @@
+@font-face {
+    font-family: "mont-extralight";
+    src: url('/fonts/Mont-ExtraLightDEMO.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "mont-heavy";
+    src: url('/fonts/Mont-HeavyDEMO.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+
 body {
-    font-family: sans-serif;
+    font-family: "mont-extralight";
     margin: 40px;
     max-width: 600px;
     background-color: #bae3ca;
