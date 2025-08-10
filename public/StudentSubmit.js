@@ -1,9 +1,8 @@
-console.log("🚀 studentscript.js is loaded");
-
 document.addEventListener("DOMContentLoaded", function () {
     const form = document.getElementById("submissionForm");
     const fileInput = form.elements["zipFile"];
     const fileStatus = document.getElementById("fileStatus");
+    const fileNameSpan = document.getElementById("file-name"); // <— add this (if you have the span)
     const errorMsg = document.getElementById("errorMsg");
 
     // Show uploaded file name
@@ -13,6 +12,8 @@ document.addEventListener("DOMContentLoaded", function () {
         } else {
         fileStatus.textContent = "";
         }
+        if (fileNameSpan) fileNameSpan.textContent = name || "No file chosen"; // <— add this
+
     });
 
     form.addEventListener("submit", async (e) => {

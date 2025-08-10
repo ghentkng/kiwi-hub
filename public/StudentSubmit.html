@@ -47,11 +47,16 @@
             <input type="text" id="code" name="code" required>
         </label>
 
-        <label for="zipFile">
-            Upload your zip file:
-            <input type="file" id="zipFile" name="zipFile" accept=".zip" required>
-            <div class="uploaded" id="fileStatus"></div>
-        </label>
+        Upload your zip file:
+        <input id="zipFile" type="file" name="zipFile" accept=".zip" required hidden>
+        <div class="uploaded" id="fileStatus"></div>
+        <!-- Styled label that looks like a button -->
+        <label for="zipFile" class="btn">Choose file</label>
+
+        <!-- Span to show the selected filename -->
+        <span id="file-name">No file chosen</span>
+
+        <div class="uploaded" id="fileStatus"></div>
 
     <div class="error" id="errorMsg"></div>
 
