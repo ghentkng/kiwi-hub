@@ -26,6 +26,7 @@
     height: 48px; /* matches h1 text height exactly */
     width: auto;
     position: relative;
+    margin-top: -4;
     top: 0;
 }
 
