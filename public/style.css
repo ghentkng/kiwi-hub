@@ -1,19 +1,22 @@
 @font-face {
-    font-family: "mont-extralight";
-    src: url('/fonts/Mont-ExtraLightDEMO.otf') format('opentype');
-    font-weight: normal;
+    font-family: 'Mont';
+    src: url('../assets/fonts/Mont-ExtraLightDEMO.otf') format('opentype');
+    font-weight: 200;
     font-style: normal;
+    font-display: swap;
 }
 
 @font-face {
-    font-family: "mont-heavy";
-    src: url('/fonts/Mont-HeavyDEMO.otf') format('opentype');
-    font-weight: normal;
+    font-family: 'Mont';
+    src: url('../assets/fonts/Mont-HeavyDEMO.otf') format('opentype');
+    font-weight: 900;
     font-style: normal;
+    font-display: swap;
 }
 
 body {
-    font-family: "mont-extralight";
+    font-family: "Mont", sans-serif;
+    font-weight: 200;
     margin: 40px;
     max-width: 600px;
     background-color: #bae3ca;
