@@ -386,45 +386,65 @@ document.getElementById('manage-playlists-btn').addEventListener('click', () => 
     window.open(`/playlist-popup?page=${pageName}`, 'PlaylistPopup', 'width=600,height=400');
 });
 
-async function loadPlaylistButtons() {
+// Helper: normalize any "Button1"/"button 1" -> "button1"
+function normalizeButtonName(name) {
+    const m = String(name || '').trim().match(/^button\s*([123])$/i);
+    return m ? `button${m[1]}` : '';
+    }
+
+    async function loadPlaylistButtons() {
     const res = await fetch(`/playlists/${pageName}`);
     const playlists = await res.json();
 
-    // Group playlists by button_name
-    const grouped = {};
+    // Group playlists by normalized button_name
+    const grouped = {
+        button1: { display_name: '', items: [] },
+        button2: { display_name: '', items: [] },
+        button3: { display_name: '', items: [] }
+    };
+
     playlists.forEach(pl => {
-        if (!grouped[pl.button_name]) {
-            grouped[pl.button_name] = { display_name: pl.display_name, items: [] };
+        const key = normalizeButtonName(pl.button_name);
+        if (!grouped[key]) return;
+        if (!grouped[key].display_name && pl.display_name) {
+        grouped[key].display_name = pl.display_name;
         }
-        grouped[pl.button_name].items.push(pl);
+        grouped[key].items.push(pl);
     });
 
     const container = document.getElementById('playlist-buttons-container');
+    if (!container) return; // guard if the container isn't on this page
     container.innerHTML = '';
 
-    Object.keys(grouped).forEach(buttonName => {
-        const buttonInfo = grouped[buttonName];
+    Object.entries(grouped).forEach(([key, info]) => {
+    if (!info.items.length) return; // only render if there are playlists
+    const btn = document.createElement('button');
+    const label = info.display_name || key.replace('button', 'Button ');
+    btn.textContent = label;
+    btn.addEventListener('click', async () => {
+    const r = await fetch(`/playlists/${pageName}/play`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ button_name: key }) // <-- lowercase canonical
+    });
+    const data = await r.json();
+    if (data.url) {
+    window.open(data.url, '_blank');
+    } else {
+    alert('No playlist URL found.');
+    }
+});
+container.appendChild(btn);
+});
+}
 
-        // Only render button if it has playlists
-        if (buttonInfo.items.length > 0) {
-            const btn = document.createElement('button');
-            btn.textContent = buttonInfo.display_name || buttonName;
-            btn.addEventListener('click', async () => {
-                const res = await fetch(`/playlists/${pageName}/play`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ button_name: buttonName })
-                });
-                const data = await res.json();
-                if (data.url) {
-                    window.open(data.url, '_blank'); // Open playlist in new tab
-                } else {
-                    alert('No playlist URL found.');
-                }
-            });
-            container.appendChild(btn);
-        }
+const manageBtn = document.getElementById('manage-playlists-btn');
+if (manageBtn) {
+    manageBtn.addEventListener('click', () => {
+        window.open(`/playlist-popup?page=${pageName}`, 'PlaylistPopup', 'width=600,height=400');
     });
 }
+
+
 
 document.addEventListener('DOMContentLoaded', loadPlaylistButtons);
