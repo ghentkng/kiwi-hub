@@ -21,10 +21,9 @@ function insertLineBreak() {
     const br = document.createElement('br');
     const space = document.createTextNode('\u200B'); // zero-width space
 
-    range.insertNode(space); // insert space first so caret can go there
-    range.insertNode(br);    // then insert the break just before
+    range.insertNode(space);
+    range.insertNode(br);
 
-    // Move caret after space
     range.setStartAfter(space);
     range.setEndAfter(space);
     selection.removeAllRanges();
@@ -35,7 +34,6 @@ function formatLinksInEditable(div) {
     try {
         const selection = window.getSelection();
 
-        // Skip if no range or selection is outside the div
         if (!selection.rangeCount || !div.contains(selection.anchorNode)) {
             applyLinkFormatting(div);
             return;
@@ -51,7 +49,7 @@ function formatLinksInEditable(div) {
         setCaretPosition(div, caretOffset);
     } catch (err) {
         console.warn("formatLinksInEditable failed, falling back:", err);
-        applyLinkFormatting(div); // still apply formatting
+        applyLinkFormatting(div);
     }
 }
 
@@ -75,7 +73,6 @@ function applyLinkFormatting(div) {
             const matchStart = match.index;
             const matchText = match[0];
 
-            // Add preceding plain text
             if (matchStart > lastIndex) {
                 fragment.appendChild(document.createTextNode(text.slice(lastIndex, matchStart)));
             }
@@ -119,7 +116,6 @@ function applyLinkFormatting(div) {
             lastIndex = match.index + matchText.length;
         }
 
-        // Add any remaining text
         if (lastIndex < text.length) {
             fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
         }
@@ -155,7 +151,7 @@ function moveCaretToEnd(el) {
     const range = document.createRange();
     const sel = window.getSelection();
     range.selectNodeContents(el);
-    range.collapse(false); // collapse to end
+    range.collapse(false);
     sel.removeAllRanges();
     sel.addRange(range);
 }
@@ -190,7 +186,6 @@ function setCaretPosition(el, offset) {
     }
 }
 
-// ✅ Move the regex to global scope so it's usable in multiple functions
 const markdownLinkRegex = /^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/;
 
 function generateWeek(startDate, validDates) {
@@ -198,71 +193,53 @@ function generateWeek(startDate, validDates) {
     weekDiv.className = 'week';
 
     for (let i = 0; i < 5; i++) {
-        // Calculate this day's date
         const dayDate = new Date(startDate);
         dayDate.setDate(dayDate.getDate() + i);
         const dateStr = dayDate.toISOString().split('T')[0];
         validDates.push(dateStr);
 
-        // Create day container
         const dayDiv = document.createElement('div');
         dayDiv.classList.add('day');
         dayDiv.dataset.date = dateStr;
 
-        // Add label (Mon, Aug 1, etc.)
         const label = document.createElement('div');
         label.textContent = formatDate(dayDate);
         label.style.fontWeight = 'bold';
         label.style.marginBottom = '0.5em';
 
-        // Create editable note area
         const textarea = document.createElement('div');
         textarea.contentEditable = true;
         textarea.className = 'calendar-note';
         textarea.setAttribute('data-date', dateStr);
-        textarea.innerHTML = ''; // Will be populated by loadNotesFromServer()
+        textarea.innerHTML = '';
 
-        // Save notes on input
         textarea.addEventListener('input', () => {
-            formatLinksInEditable(textarea); // Format links as you type
+            formatLinksInEditable(textarea);
             saveNoteToServer(pageName, dateStr, textarea.innerHTML);
         });
 
-        // Handle Enter key for line breaks
         textarea.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
-                e.preventDefault(); // Prevent default newline
-                insertLineBreak();  // Insert controlled line break
+                e.preventDefault();
+                insertLineBreak();
             }
         });
 
-        // Wrap textarea
         const wrapper = document.createElement('div');
         wrapper.className = 'day-wrapper';
         wrapper.appendChild(textarea);
 
-        // Add everything to dayDiv
         dayDiv.appendChild(label);
         dayDiv.appendChild(wrapper);
 
-        // Add checkbox for completion state
         const dayToggle = document.createElement('input');
         dayToggle.type = 'checkbox';
         dayToggle.className = 'day-toggle';
 
-        // Checkbox state will be set later by loadNotesFromServer()
-
-        // Save checkbox state when changed
         dayToggle.addEventListener('change', () => {
             const isChecked = dayToggle.checked;
-
-            if (isChecked) {
-                dayDiv.classList.add('complete');
-            } else {
-                dayDiv.classList.remove('complete');
-            }
-
-            // Save state AND current note content to DB
+            if (isChecked) dayDiv.classList.add('complete');
+            else dayDiv.classList.remove('complete');
             saveNoteToServer(pageName, dateStr, textarea.innerHTML, isChecked);
         });
 
@@ -317,17 +294,10 @@ document.addEventListener('click', (e) => {
     const target = e.target;
     if (target.tagName === 'A' && target.closest('[contenteditable]')) {
         e.preventDefault();
-
         const editable = target.closest('[contenteditable]');
         editable.contentEditable = 'false';
-
-        // Let the link open in a new tab
         window.open(target.href, '_blank');
-
-        // Restore edit mode shortly after
-        setTimeout(() => {
-            editable.contentEditable = 'true';
-        }, 100);
+        setTimeout(() => { editable.contentEditable = 'true'; }, 100);
     }
 });
 
@@ -340,22 +310,16 @@ async function loadNotesFromServer(pageName) {
     notes.forEach(note => {
         const dayBox = document.querySelector(`[data-date="${note.date_key}"]`);
         if (dayBox) {
-            // Update note content
             const textarea = dayBox.querySelector('.calendar-note');
             if (textarea) {
                 textarea.innerHTML = note.content || '';
-                formatLinksInEditable(textarea); // reapply formatting and checkbox click events
+                formatLinksInEditable(textarea);
             }
-
-            // Update checkbox state
             const dayToggle = dayBox.querySelector('.day-toggle');
             if (dayToggle) {
                 dayToggle.checked = note.complete;
-                if (note.complete) {
-                    dayBox.classList.add('complete');
-                } else {
-                    dayBox.classList.remove('complete');
-                }
+                if (note.complete) dayBox.classList.add('complete');
+                else dayBox.classList.remove('complete');
             }
         }
     });
@@ -374,17 +338,34 @@ async function saveNoteToServer(pageName, dateKey, content, complete = false) {
     });
 }
 
-// ---------------------- PLAYLIST BUTTONS ----------------------
+/* ======================= PLAYLIST BUTTONS (HARDENED) ======================= */
 
-// Helper: normalize any "Button1"/"button 1" -> "button1"
+const PLAYLIST_DEBUG = true; // set to false to hide debug logs
+
 function normalizeButtonName(name) {
     const m = String(name || '').trim().match(/^button\s*([123])$/i);
     return m ? `button${m[1]}` : '';
 }
 
+// Safely extract array from different API shapes
+function extractRows(payload) {
+    if (Array.isArray(payload)) return payload;
+    if (payload && Array.isArray(payload.data)) return payload.data;
+    if (payload && Array.isArray(payload.rows)) return payload.rows;
+    return [];
+}
+
+// Try alternate field names
+function getButtonField(obj) {
+    return obj.button_name ?? obj.button ?? obj.slot ?? obj.btn ?? '';
+}
+function getDisplayField(obj) {
+    return obj.display_name ?? obj.title ?? obj.label ?? '';
+}
+
 async function loadPlaylistButtons() {
     const container = document.getElementById('playlist-buttons-container');
-    if (!container) return; // guard if the container isn't on this page
+    if (!container) return;
 
     if (!pageName) {
         container.innerHTML = '<div class="error">Missing pageName.</div>';
@@ -394,35 +375,50 @@ async function loadPlaylistButtons() {
     container.innerHTML = 'Loading playlists…';
 
     let playlists = [];
+    let rawPayload = null;
     try {
-        const res = await fetch(`/playlists/${pageName}`, { headers: { 'Accept': 'application/json' } });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        playlists = await res.json();
+        const res = await fetch(`/playlists/${encodeURIComponent(pageName)}`, {
+            headers: { 'Accept': 'application/json' }
+        });
+        if (!res.ok) {
+            const text = await res.text().catch(() => '');
+            throw new Error(`HTTP ${res.status} ${res.statusText} ${text}`);
+        }
+        rawPayload = await res.json();
+        playlists = extractRows(rawPayload);
     } catch (e) {
         console.error('[playlists] fetch failed:', e);
         container.innerHTML = `<div class="error">Couldn’t load playlists for “${pageName}”.</div>`;
         return;
     }
 
-    // Group playlists by normalized button_name
+    // Group
     const grouped = {
         button1: { display_name: '', items: [] },
         button2: { display_name: '', items: [] },
         button3: { display_name: '', items: [] }
     };
 
+    // Track diagnostics
+    const seenButtons = new Set();
+    const rows = [];
+
     playlists.forEach(pl => {
-        const key = normalizeButtonName(pl.button_name);
+        const rawBtn = getButtonField(pl);
+        const key = normalizeButtonName(rawBtn);
+        seenButtons.add(String(rawBtn));
+        rows.push({ rawBtn, normalized: key, display: getDisplayField(pl), id: pl.id });
+
         if (!grouped[key]) return;
-        if (!grouped[key].display_name && pl.display_name) {
-            grouped[key].display_name = pl.display_name;
+        if (!grouped[key].display_name && getDisplayField(pl)) {
+            grouped[key].display_name = getDisplayField(pl);
         }
         grouped[key].items.push(pl);
     });
 
     container.innerHTML = '';
 
-    // Render ONLY groups with one or more items
+    // Render ONLY groups with items
     ['button1', 'button2', 'button3'].forEach(key => {
         const info = grouped[key];
         if (info.items.length === 0) return;
@@ -433,17 +429,14 @@ async function loadPlaylistButtons() {
 
         btn.addEventListener('click', async () => {
             try {
-                const r = await fetch(`/playlists/${pageName}/play`, {
+                const r = await fetch(`/playlists/${encodeURIComponent(pageName)}/play`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ button_name: key }) // canonical lowercase
+                    body: JSON.stringify({ button_name: key })
                 });
                 const data = await r.json();
-                if (data.url) {
-                    window.open(data.url, '_blank');
-                } else {
-                    alert('No playlist URL found.');
-                }
+                if (data.url) window.open(data.url, '_blank');
+                else alert('No playlist URL found.');
             } catch (err) {
                 console.error('[playlists] play failed:', err);
                 alert('Failed to start playlist.');
@@ -453,9 +446,31 @@ async function loadPlaylistButtons() {
         container.appendChild(btn);
     });
 
-    // If nothing rendered, leave empty (or show a hint if you prefer)
-    if (!container.children.length) {
-        container.innerHTML = '';
+    // Debug information if nothing rendered
+    if (!container.children.length && PLAYLIST_DEBUG) {
+        const dbg = document.createElement('pre');
+        dbg.style.whiteSpace = 'pre-wrap';
+        dbg.style.fontSize = '0.9em';
+        dbg.style.padding = '0.75em';
+        dbg.style.border = '1px dashed #bbb';
+        dbg.style.borderRadius = '8px';
+        dbg.style.background = '#fafafa';
+        const summary = {
+            pageName,
+            payloadShape: Array.isArray(rawPayload) ? 'array' : (rawPayload ? Object.keys(rawPayload) : 'null'),
+            totalRows: playlists.length,
+            distinctButtonNameValues: [...seenButtons],
+            counts: {
+                button1: grouped.button1.items.length,
+                button2: grouped.button2.items.length,
+                button3: grouped.button3.items.length
+            },
+            note: 'No buttons rendered because all groups had 0 items. Check distinctButtonNameValues and server field names.'
+        };
+        dbg.textContent = '[playlists DEBUG]\n' + JSON.stringify(summary, null, 2);
+        container.appendChild(dbg);
+        console.warn('[playlists DEBUG rows]', rows);
+        console.warn('[playlists DEBUG raw payload]', rawPayload);
     }
 }
 
