@@ -101,13 +101,6 @@ if (!req.session.loggedIn) {
 res.sendFile(path.join(__dirname, 'public', 'SubmissionsDashboard.html'));
 });
 
-// Logout
-app.get('/logout', (req, res) => {
-req.session.destroy(() => {
-    res.redirect('/login');
-});
-});
-
 app.get('/download/:id', async (req, res) => {
     if (!req.session.loggedIn) return res.status(403).send('Forbidden');
 
@@ -149,8 +142,6 @@ app.post('/archive/:id', async (req, res) => {
     }
 });
 
-
-
 app.get('/submissions-data', async (req, res) => {
     if (!req.session.loggedIn) return res.status(403).send('Forbidden');
 
@@ -172,6 +163,15 @@ app.get('/grading', (req, res) => {
     }
     res.sendFile(path.join(__dirname, 'public', 'SubmissionsDashboard.html'));
 });
+
+// Logout
+app.get('/logout', (req, res) => {
+req.session.destroy(() => {
+    res.redirect('/login');
+});
+});
+
+//Planning Pages
 
 app.get('/cs1planning', (req, res) => {
     if (!req.session.loggedIn) {
@@ -377,77 +377,6 @@ app.post('/playlists/:page/play', async (req, res) => {
     } catch (err) {
         console.error('Error rotating playlists:', err);
         res.status(500).send('Error playing playlist');
-    }
-});
-
-app.post('/playlists/:page/manage', async (req, res) => {
-    console.log('Playlist action request:', {
-    page,
-    action,
-    button_name,
-    display_name,
-    playlist
-});
-    if (!req.session.loggedIn) return res.status(403).send('Forbidden');
-    const { page } = req.params;
-    const { action, button_name, display_name, playlist } = req.body;
-
-    try {
-        if (action === 'setDisplayName') {
-            // Update display name for all rows with this button (or set if new)
-            await pool.query(
-                `UPDATE playlist_queues
-                SET display_name = $1
-                WHERE page_name = $2 AND button_name = $3`,
-                [display_name, page, button_name]
-            );
-            return res.send('Display name updated');
-        }
-
-        if (action === 'add') {
-            // Add new playlist entry
-            const { name, url } = playlist;
-            const { rows } = await pool.query(
-                `SELECT COALESCE(MAX(position),0)+1 AS next_pos
-                FROM playlist_queues
-                WHERE page_name = $1 AND button_name = $2`,
-                [page, button_name]
-            );
-            const nextPos = rows[0].next_pos;
-
-            await pool.query(
-                `INSERT INTO playlist_queues (page_name, button_name, display_name, position, name, url)
-                VALUES ($1, $2, $3, $4, $5, $6)`,
-                [page, button_name, display_name, nextPos, name, url]
-            );
-            return res.send('Playlist added');
-        }
-
-        if (action === 'delete') {
-            // Delete playlist entry
-            await pool.query(
-                `DELETE FROM playlist_queues WHERE id = $1`,
-                [playlist.id]
-            );
-            return res.send('Playlist deleted');
-        }
-
-        if (action === 'update') {
-            // Update playlist entry (name or url)
-            const { id, name, url } = playlist;
-            await pool.query(
-                `UPDATE playlist_queues
-                SET name = $1, url = $2
-                WHERE id = $3`,
-                [name, url, id]
-            );
-            return res.send('Playlist updated');
-        }
-
-        res.status(400).send('Invalid action');
-    } catch (err) {
-        console.error('Error managing playlists:', err);
-        res.status(500).send('Error managing playlists');
     }
 });
 
