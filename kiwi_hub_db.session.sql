@@ -1,3 +1,5 @@
-UPDATE playlist_queues
-SET page_name = 'apaplanning'
-WHERE page_name = 'APAPlanning'; -- Or whatever value is mismatched
+SELECT button_name, COUNT(*) AS n
+FROM playlist_queues
+WHERE page_name = 'apaplanning'
+GROUP BY button_name
+ORDER BY button_name;
