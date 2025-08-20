@@ -274,69 +274,69 @@ app.get('/playlists/:page', async (req, res) => {
 });
 
 app.post('/playlists/:page/manage', async (req, res) => {
-    if (!req.session.loggedIn) return res.status(403).send('Forbidden');
-    const { page } = req.params;
-    const { action, button_name, display_name, playlist } = req.body;
+  if (!req.session.loggedIn) return res.status(403).send('Forbidden');
 
-    try {
-        if (action === 'add') {
-            // Find next position for the button
-            const result = await pool.query(
-                    `SELECT COALESCE(MAX(position), 0) + 1 AS next_pos 
-                    FROM playlist_queues 
-                    WHERE page_name = $1 AND button_name = $2`,
-                [page, button_name]
-            );
-            const nextPos = result.rows[0].next_pos;
+  const { page } = req.params;
+  const { action, display_name, playlist } = req.body;
 
-            await pool.query(
-                `INSERT INTO playlist_queues (page_name, button_name, display_name, name, url, position)
-                    VALUES ($1, $2, $3, $4, $5, $6)`,
-                [page, button_name, display_name || '', playlist.name, playlist.url, nextPos]
-            );
+  // ✅ NEW: normalize any "Button1", "button 1", etc. → "button1|2|3"
+  const canonButton = String(req.body.button_name || '')
+    .trim()
+    .toLowerCase()
+    .replace(/^button\s*([123])$/, 'button$1');
 
-            return res.json({ success: true });
-        }
+  try {
+    if (action === 'add') {
+      const result = await pool.query(
+        `SELECT COALESCE(MAX(position), 0) + 1 AS next_pos
+         FROM playlist_queues
+         WHERE page_name = $1 AND button_name = $2`,
+        [page, canonButton]
+      );
+      const nextPos = result.rows[0].next_pos;
 
-        if (action === 'update') {
-            await pool.query(
-                `UPDATE playlist_queues 
-                    SET name = $1, url = $2 
-                    WHERE id = $3 AND page_name = $4 AND button_name = $5`,
-                [playlist.name, playlist.url, playlist.id, page, button_name]
-            );
-
-            return res.json({ success: true });
-        }
-
-        if (action === 'delete') {
-            await pool.query(
-                `DELETE FROM playlist_queues 
-                    WHERE id = $1 AND page_name = $2 AND button_name = $3`,
-                [playlist.id, page, button_name]
-            );
-
-            return res.json({ success: true });
-        }
-
-        if (action === 'setDisplayName') {
-            // Update display_name for all entries under this button
-            await pool.query(
-                `UPDATE playlist_queues 
-                    SET display_name = $1 
-                    WHERE page_name = $2 AND button_name = $3`,
-                [display_name, page, button_name]
-            );
-
-            return res.json({ success: true });
-        }
-
-        res.status(400).json({ error: 'Invalid action' });
-
-    } catch (err) {
-        console.error('Error managing playlist:', err);
-        res.status(500).json({ error: 'Failed to manage playlist' });
+      await pool.query(
+        `INSERT INTO playlist_queues (page_name, button_name, display_name, name, url, position)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [page, canonButton, display_name || '', playlist.name, playlist.url, nextPos]
+      );
+      return res.json({ success: true });
     }
+
+    if (action === 'update') {
+      await pool.query(
+        `UPDATE playlist_queues
+         SET name = $1, url = $2
+         WHERE id = $3 AND page_name = $4 AND button_name = $5`,
+        [playlist.name, playlist.url, playlist.id, page, canonButton]
+      );
+      return res.json({ success: true });
+    }
+
+    if (action === 'delete') {
+      await pool.query(
+        `DELETE FROM playlist_queues
+         WHERE id = $1 AND page_name = $2 AND button_name = $3`,
+        [playlist.id, page, canonButton]
+      );
+      return res.json({ success: true });
+    }
+
+    if (action === 'setDisplayName') {
+      await pool.query(
+        `UPDATE playlist_queues
+         SET display_name = $1
+         WHERE page_name = $2 AND button_name = $3`,
+        [display_name, page, canonButton]
+      );
+      return res.json({ success: true });
+    }
+
+    res.status(400).json({ error: 'Invalid action' });
+  } catch (err) {
+    console.error('Error managing playlist:', err);
+    res.status(500).json({ error: 'Failed to manage playlist' });
+  }
 });
 
 
