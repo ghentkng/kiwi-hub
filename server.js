@@ -381,6 +381,13 @@ app.post('/playlists/:page/play', async (req, res) => {
 });
 
 app.post('/playlists/:page/manage', async (req, res) => {
+    console.log('Playlist action request:', {
+    page,
+    action,
+    button_name,
+    display_name,
+    playlist
+});
     if (!req.session.loggedIn) return res.status(403).send('Forbidden');
     const { page } = req.params;
     const { action, button_name, display_name, playlist } = req.body;
