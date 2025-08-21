@@ -18,8 +18,11 @@ html, body {
     "calendar calendar calendar calendar calendar calendar";
   gap: 16px;
   padding: 16px;
-  width: 100%;
   box-sizing: border-box;
+  transform: scale(0.5); /* 50% size */
+  transform-origin: top left;
+  width: 200%;  /* counteract scaling so layout fills */
+  height: 200%;
 }
 
 #page-header        { grid-area: header; }

@@ -484,3 +484,10 @@ if (manageBtn) {
 
 // Initial load for playlist buttons
 document.addEventListener('DOMContentLoaded', loadPlaylistButtons);
+
+function resizePage() {
+  const scale = window.innerWidth / 1920; // assuming 1920px is your "full size"
+  document.getElementById("page-wrapper").style.transform = `scale(${scale})`;
+}
+window.addEventListener("resize", resizePage);
+resizePage();
