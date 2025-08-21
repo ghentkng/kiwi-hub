@@ -130,3 +130,38 @@ button{
     min-width: 120px;
 }
 
+/* QUICK LINKS: 5-column grid */
+#quick-links-container {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  align-items: stretch;
+}
+
+/* make the entire grid cell clickable without underlines */
+#quick-links-container a {
+  text-decoration: none;
+}
+
+/* override the global button width from planningpage.css for this section */
+#quick-links-container button {
+  width: 100%;            /* fill the grid cell */
+  height: 100%;           /* optional: make the button fill row height */
+  margin: 0;              /* remove extra spacing added elsewhere */
+  display: inline-block;  /* prevent odd stretching in some browsers */
+}
+
+/* Optional: responsive tweaks so it doesn’t cram on small screens */
+@media (max-width: 1000px) {
+  #quick-links-container { grid-template-columns: repeat(4, 1fr); }
+}
+@media (max-width: 800px) {
+  #quick-links-container { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 600px) {
+  #quick-links-container { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 420px) {
+  #quick-links-container { grid-template-columns: 1fr; }
+}
+
