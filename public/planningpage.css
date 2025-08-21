@@ -13,9 +13,9 @@ html, body {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   grid-template-areas:
-    "header   header   header   header   header"
+    "header   header   header   header   header   header"
     "links    links    links    playlist slides   slides"
-    "calendar calendar calendar calendar calendar";
+    "calendar calendar calendar calendar calendar calendar";
   gap: 16px;
   padding: 16px;
   width: 100%;
