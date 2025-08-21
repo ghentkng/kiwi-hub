@@ -164,6 +164,13 @@
             delBtn.addEventListener('click', async () => {
             if (!confirm('Delete this playlist?')) return;
             try {
+                console.log("🧪 Sending delete request with:", {
+    page: pageName,
+    action: 'delete',
+    button_name: key,
+    playlist: { id: pl.id }
+});
+
                 const res = await fetch(`/playlists/${encodeURIComponent(pageName)}/manage`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -173,6 +180,7 @@
                     playlist: { id: pl.id }
                 })
                 });
+
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 await loadPlaylists();
             } catch (e) {
