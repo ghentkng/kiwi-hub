@@ -175,7 +175,7 @@
 console.log("💥 POSTing to:", `/playlists/${pageName}/manage`);
 
 
-                const res = await fetch(`/playlists/${encodeURIComponent(pageName)}/manage`, {
+const res = await fetch(`${window.location.origin}/playlists/${DOMPurify.sanitize(pageName)}/manage`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
