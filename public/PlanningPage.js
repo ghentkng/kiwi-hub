@@ -485,18 +485,67 @@ if (manageBtn) {
 // Initial load for playlist buttons
 document.addEventListener('DOMContentLoaded', loadPlaylistButtons);
 
-function resizePage() {
-  const baseWidth = 1920;   // the width you designed for
-  let scale = window.innerWidth / baseWidth;
-  
-  if (scale > 1) scale = 1;  // don't scale up, only down
-  
-  const wrapper = document.getElementById("page-wrapper");
-  wrapper.style.transform = `scale(${scale})`;
-  wrapper.style.transformOrigin = "top left";
-  
-  // expand wrapper so content still fits inside after scaling
-  wrapper.style.width = (100 / scale) + "%";
-}
-window.addEventListener("resize", resizePage);
-resizePage();
+// ---------- Page "slide-style" autoscale ----------
+(function () {
+  // Tune this to your intended full-size width (e.g., 1200, 1440, 1920)
+  const BASE_WIDTH = 1440;
+
+  // Set true to fit BOTH width and height (still never scales up past 1)
+  const FIT_BOTH = false;
+
+  const WRAPPER_ID = 'page-wrapper';
+
+  // Lightweight debounce so resize isn’t spammy
+  function debounce(fn, delay = 100) {
+    let t;
+    return (...args) => {
+      clearTimeout(t);
+      t = setTimeout(() => fn(...args), delay);
+    };
+  }
+
+  function autoscale() {
+    const wrapper = document.getElementById(WRAPPER_ID);
+    if (!wrapper) return;
+
+    // Reset to natural size so our measurements are correct
+    wrapper.style.transform = 'none';
+    wrapper.style.width = '';   // clear prior width override
+    // (leave height alone unless you also want to counter-scale height)
+
+    const vw = Math.max(document.documentElement.clientWidth,  window.innerWidth  || 0);
+    const vh = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+
+    let scale;
+
+    if (FIT_BOTH) {
+      // Measure natural content size (unscaled)
+      const naturalW = wrapper.scrollWidth  || wrapper.offsetWidth  || BASE_WIDTH;
+      const naturalH = wrapper.scrollHeight || wrapper.offsetHeight || vh;
+
+      scale = Math.min(vw / naturalW, vh / naturalH, 1); // never > 1
+    } else {
+      // Width-only fit
+      scale = Math.min(vw / BASE_WIDTH, 1);               // never > 1
+    }
+
+    // Apply scale
+    wrapper.style.transform = `scale(${scale})`;
+    wrapper.style.transformOrigin = 'top left';
+
+    // Counteract visual shrink so the scaled content still fills the viewport width
+    // (prevents the layout from looking narrow after scaling down)
+    wrapper.style.width = (100 / Math.max(scale, 0.001)) + '%';
+  }
+
+  const init = () => {
+    autoscale();
+    window.addEventListener('resize', debounce(autoscale, 100));
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
