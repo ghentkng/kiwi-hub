@@ -486,8 +486,17 @@ if (manageBtn) {
 document.addEventListener('DOMContentLoaded', loadPlaylistButtons);
 
 function resizePage() {
-  const scale = window.innerWidth / 1920; // assuming 1920px is your "full size"
-  document.getElementById("page-wrapper").style.transform = `scale(${scale})`;
+  const baseWidth = 1920;   // the width you designed for
+  let scale = window.innerWidth / baseWidth;
+  
+  if (scale > 1) scale = 1;  // don't scale up, only down
+  
+  const wrapper = document.getElementById("page-wrapper");
+  wrapper.style.transform = `scale(${scale})`;
+  wrapper.style.transformOrigin = "top left";
+  
+  // expand wrapper so content still fits inside after scaling
+  wrapper.style.width = (100 / scale) + "%";
 }
 window.addEventListener("resize", resizePage);
 resizePage();
