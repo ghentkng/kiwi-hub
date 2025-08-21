@@ -169,7 +169,11 @@
     action: 'delete',
     button_name: key,
     playlist: { id: pl.id }
+
 });
+
+console.log("💥 POSTing to:", `/playlists/${pageName}/manage`);
+
 
                 const res = await fetch(`/playlists/${encodeURIComponent(pageName)}/manage`, {
                 method: 'POST',
