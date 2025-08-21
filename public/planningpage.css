@@ -217,3 +217,22 @@ button { width: 100px; }  /* keep if you want a global baseline elsewhere */
 @media (max-width: 420px) {
   #quick-links-container { grid-template-columns: 1fr; }
 }
+
+/* === Override: stack playlists vertically === */
+#playlist-wrapper {
+  display: grid;                 /* was: flex */
+  grid-template-columns: 1fr;
+  align-items: start;
+  gap: 12px;
+}
+
+#playlist-buttons-container {
+  display: grid;                 /* was: flex */
+  grid-auto-flow: row;
+  grid-template-columns: 1fr;    /* single column */
+  gap: 10px;
+}
+
+/* make buttons fill the column (optional) */
+#playlist-buttons-container button { width: 100%; max-width: 100%; }
+#manage-playlists-btn { width: 100%; }      /* or remove this to keep it auto width */
