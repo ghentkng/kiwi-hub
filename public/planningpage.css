@@ -136,6 +136,7 @@ button{
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 10px;
   align-items: stretch;
+  grid-auto-flow: row dense;
 }
 
 /* make the entire grid cell clickable without underlines */
@@ -176,3 +177,4 @@ button{
 #quick-links-container .col-3 { grid-column: 3; }
 #quick-links-container .col-4 { grid-column: 4; }
 #quick-links-container .col-5 { grid-column: 5; }
+
