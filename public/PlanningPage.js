@@ -486,56 +486,52 @@ if (manageBtn) {
 document.addEventListener('DOMContentLoaded', loadPlaylistButtons);
 
 // ---------- Page "slide-style" autoscale ----------
+// ---------- Page "slide-style" autoscale (final) ----------
 (function () {
-  // Tune this to your intended full-size width (e.g., 1200, 1440, 1920)
-  const BASE_WIDTH = 1440;
-
-  // Set true to fit BOTH width and height (still never scales up past 1)
-  const FIT_BOTH = false;
-
+  const FIT_BOTH   = false;        // set true to also fit height
   const WRAPPER_ID = 'page-wrapper';
 
-  // Lightweight debounce so resize isn’t spammy
+  // debounce helper
   function debounce(fn, delay = 100) {
     let t;
-    return (...args) => {
-      clearTimeout(t);
-      t = setTimeout(() => fn(...args), delay);
-    };
+    return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), delay); };
   }
 
   function autoscale() {
     const wrapper = document.getElementById(WRAPPER_ID);
     if (!wrapper) return;
 
-    // Reset to natural size so our measurements are correct
+    // 1) reset before measuring (overrides any leftover CSS transform)
     wrapper.style.transform = 'none';
-    wrapper.style.width = '';   // clear prior width override
-    // (leave height alone unless you also want to counter-scale height)
+    wrapper.style.width = '';      // clear width override
+    wrapper.style.transformOrigin = 'top left';
+
+    // 2) measure natural (unscaled) size
+    const naturalW = wrapper.scrollWidth  || wrapper.offsetWidth;
+    const naturalH = wrapper.scrollHeight || wrapper.offsetHeight;
 
     const vw = Math.max(document.documentElement.clientWidth,  window.innerWidth  || 0);
     const vh = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
 
-    let scale;
+    // 3) compute scale needed to fit; do NOT force scale > 1
+    let scale = FIT_BOTH
+      ? Math.min(vw / naturalW, vh / naturalH, 1)
+      : Math.min(vw / naturalW, 1);
 
-    if (FIT_BOTH) {
-      // Measure natural content size (unscaled)
-      const naturalW = wrapper.scrollWidth  || wrapper.offsetWidth  || BASE_WIDTH;
-      const naturalH = wrapper.scrollHeight || wrapper.offsetHeight || vh;
-
-      scale = Math.min(vw / naturalW, vh / naturalH, 1); // never > 1
+    // 4) only apply scaling if we actually need to shrink
+    if (scale < 0.999) {
+      wrapper.style.transform = `scale(${scale})`;
+      // counteract the visual shrink so layout fills width
+      // using the viewport ensures perfect fit even if naturalW varies
+      wrapper.style.width = (vw / Math.max(scale, 0.001)) + 'px';
     } else {
-      // Width-only fit
-      scale = Math.min(vw / BASE_WIDTH, 1);               // never > 1
+      // full size — ensure no lingering overrides keep it “half width”
+      wrapper.style.transform = 'none';
+      wrapper.style.width = '';
     }
 
-    // Apply scale
-    wrapper.style.transform = `scale(${scale})`;
-    wrapper.style.transformOrigin = 'top left';
-
-    // Counteract visual shrink so the scaled content still fills the viewport width
-    // (prevents the layout from looking narrow after scaling down)
-    wrapper.style.width = (100 / Math.max(scale, 0.001)) + '%';
+    // (Optional) quick debug to verify what’s happening
+    // console.log({vw, naturalW, scale, applied: scale < 0.999});
   }
 
   const init = () => {
