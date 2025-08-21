@@ -11,7 +11,7 @@ html, body {
 /* ===== PAGE GRID (5 columns) ===== */
 #page-wrapper {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr)); /* your grid */
   grid-template-areas:
     "header   header   header   header   header   header"
     "links    links    links    playlist slides   slides"
@@ -19,11 +19,11 @@ html, body {
   gap: 16px;
   padding: 16px;
   box-sizing: border-box;
-  transform: scale(0.5); /* 50% size */
+
+  /* remove transform/width/height used for forced scaling */
   transform-origin: top left;
-  width: 100%;  /* counteract scaling so layout fills */
-  height: 100%;
 }
+
 
 #page-header        { grid-area: header; }
 #playlist-wrapper   { grid-area: playlist; }
