@@ -11,11 +11,10 @@ html, body {
 /* ===== PAGE GRID (5 columns) ===== */
 #page-wrapper {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   grid-template-areas:
     "header   header   header   header   header"
-    "playlist playlist playlist playlist playlist"
-    "links    links    links    slides   slides"
+    "links    links    links    playlist slides   slides"
     "calendar calendar calendar calendar calendar";
   gap: 16px;
   padding: 16px;
