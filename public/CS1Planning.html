@@ -1,4 +1,3 @@
-<!-- public/CS1Planning.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,28 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>CS1 Planning</title>
 
-  <!-- Keep your existing theme/styles -->
-  <link rel="stylesheet" href="planningpage.css" />
-  <link rel="stylesheet" href="fontsandbuttons.css" />
-  <link rel="stylesheet" href="cs1.css" />
+  <link rel="stylesheet" href="fonts.css" />
 
   <link rel="icon" type="image/png" href="/assets/kiwi-hublogocolorLARGE.png" />
 </head>
 
 <body data-page="cs1planning">
   <div id="page-wrapper">
-    <!-- Header -->
+    
     <div id="page-header">
       <h1>&Tab;CS1 Planning</h1>
     </div>
 
-    <!-- Playlists row -->
-    <div id="playlist-wrapper" class="full-row col-4">
-      <button id="manage-playlists-btn" class="manage-playlists-btn">Manage Playlists</button>
-      <div id="playlist-buttons-container"></div>
-    </div>
-
-    <!-- Quick Links (nested grid) -->
     <div id="quick-links-container">
 
       <h3 class="row-1 col-1" >CodeHS Unlocks</h3>
@@ -49,36 +38,9 @@
       <a class="row-3 col-3" href="https://www.canva.com/design/DAFUptcNmMM/Vq8uo8VNFG7XvllNENd_Tw/edit" target="_blank"><button type="button">Canva Agenda</button></a>
       <a class="row-4 col-3" href="https://docs.google.com/spreadsheets/d/1sK1Yn0ddejE7aYsu3qgOO0aJi4wMhUkIHvAkE9spWCw/edit?pli=1&gid=0#gid=0" target="_blank"><button type="button">Lesson Plans</button></a>
 
-
-
-
-   
-   
-   
     </div>
 
-    <!-- Slides -->
-    <div id="slides-container">
-      <iframe
-        src="https://docs.google.com/presentation/d/1VXDQH-5dzvJXpEGHMik86Oodt0_4PpOFWSVZqdsF4IA/edit?usp=sharing"
-        title="CS1 Slides"
-        allowfullscreen
-      ></iframe>
-    </div>
-
-    <!-- Calendar -->
-    <div id="calendar-container"></div>
   </div>
 
-  <!-- Modal stays as overlay -->
-  <div id="playlist-modal" class="modal" style="display:none;">
-    <div class="modal-content">
-      <h3>Manage Playlists</h3>
-      <div id="playlist-management"></div>
-      <button id="close-playlist-modal">Close</button>
-    </div>
-  </div>
-
-  <script src="PlanningPage.js"></script>
 </body>
 </html>
