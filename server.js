@@ -173,38 +173,14 @@ req.session.destroy(() => {
 
 //Planning Pages
 
-app.get('/cs1planning', (req, res) => {
+app.get('/teaching', (req, res) => {
     if (!req.session.loggedIn) {
-        req.session.redirectAfterLogin = '/cs1planning';
+        req.session.redirectAfterLogin = '/teaching';
         return res.redirect('/login');
     }
-    res.sendFile(path.join(__dirname, 'public', 'CS1Planning.html'));
+    res.sendFile(path.join(__dirname, 'public', 'Teaching.html'));
 });
 
-app.get('/cs2planning', (req, res) => {
-    if (!req.session.loggedIn) {
-        req.session.redirectAfterLogin = '/cs2planning';
-        return res.redirect('/login');
-    }
-    res.sendFile(path.join(__dirname, 'public', 'CS2Planning.html'));
-});
-
-
-app.get('/cs3planning', (req, res) => {
-    if (!req.session.loggedIn) {
-        req.session.redirectAfterLogin = '/cs3planning';
-        return res.redirect('/login');
-    }
-    res.sendFile(path.join(__dirname, 'public', 'CS3Planning.html'));
-});
-
-app.get('/apaplanning', (req, res) => {
-    if (!req.session.loggedIn) {
-        req.session.redirectAfterLogin = '/apaplanning';
-        return res.redirect('/login');
-    }
-    res.sendFile(path.join(__dirname, 'public', 'APAPlanning.html'));
-});
 
 app.get('/reference', (req, res) => {
     if (!req.session.loggedIn) {
@@ -212,45 +188,6 @@ app.get('/reference', (req, res) => {
         return res.redirect('/login');
     }
     res.sendFile(path.join(__dirname, 'public', 'Reference.html'));
-});
-
-app.get('/planning-notes/:page', async (req, res) => {
-    if (!req.session.loggedIn) return res.status(403).send('Forbidden');
-    const { page } = req.params;
-
-    try {
-        const { rows } = await pool.query(
-            'SELECT date_key, content, complete FROM planning_notes WHERE page_name = $1',
-            [page]
-        );
-        res.json(rows);
-    } catch (err) {
-        console.error('Error fetching notes:', err);
-        res.status(500).send('Error fetching notes');
-    }
-});
-
-
-app.post('/planning-notes', async (req, res) => {
-    if (!req.session.loggedIn) return res.status(403).send('Forbidden');
-    const { page_name, date_key, content, complete } = req.body;
-
-    try {
-        await pool.query(
-            `INSERT INTO planning_notes (page_name, date_key, content, complete)
-            VALUES ($1, $2, $3, $4)
-            ON CONFLICT (page_name, date_key)
-            DO UPDATE SET 
-                content = EXCLUDED.content,
-                complete = EXCLUDED.complete,
-                updated_at = CURRENT_TIMESTAMP`,
-            [page_name, date_key, content, complete]
-        );
-        res.send('Note saved');
-    } catch (err) {
-        console.error('Error saving note:', err);
-        res.status(500).send('Error saving note');
-    }
 });
 
 
