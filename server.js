@@ -173,38 +173,14 @@ req.session.destroy(() => {
 
 //Planning Pages
 
-app.get('/cs1planning', (req, res) => {
+app.get('/teaching', (req, res) => {
     if (!req.session.loggedIn) {
-        req.session.redirectAfterLogin = '/cs1planning';
+        req.session.redirectAfterLogin = '/teaching';
         return res.redirect('/login');
     }
-    res.sendFile(path.join(__dirname, 'public', 'CS1Planning.html'));
+    res.sendFile(path.join(__dirname, 'public', 'Teaching.html'));
 });
 
-app.get('/cs2planning', (req, res) => {
-    if (!req.session.loggedIn) {
-        req.session.redirectAfterLogin = '/cs2planning';
-        return res.redirect('/login');
-    }
-    res.sendFile(path.join(__dirname, 'public', 'CS2Planning.html'));
-});
-
-
-app.get('/cs3planning', (req, res) => {
-    if (!req.session.loggedIn) {
-        req.session.redirectAfterLogin = '/cs3planning';
-        return res.redirect('/login');
-    }
-    res.sendFile(path.join(__dirname, 'public', 'CS3Planning.html'));
-});
-
-app.get('/apaplanning', (req, res) => {
-    if (!req.session.loggedIn) {
-        req.session.redirectAfterLogin = '/apaplanning';
-        return res.redirect('/login');
-    }
-    res.sendFile(path.join(__dirname, 'public', 'APAPlanning.html'));
-});
 
 app.get('/reference', (req, res) => {
     if (!req.session.loggedIn) {
@@ -214,188 +190,9 @@ app.get('/reference', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'Reference.html'));
 });
 
-app.get('/planning-notes/:page', async (req, res) => {
-    if (!req.session.loggedIn) return res.status(403).send('Forbidden');
-    const { page } = req.params;
-
-    try {
-        const { rows } = await pool.query(
-            'SELECT date_key, content, complete FROM planning_notes WHERE page_name = $1',
-            [page]
-        );
-        res.json(rows);
-    } catch (err) {
-        console.error('Error fetching notes:', err);
-        res.status(500).send('Error fetching notes');
-    }
-});
-
-
-app.post('/planning-notes', async (req, res) => {
-    if (!req.session.loggedIn) return res.status(403).send('Forbidden');
-    const { page_name, date_key, content, complete } = req.body;
-
-    try {
-        await pool.query(
-            `INSERT INTO planning_notes (page_name, date_key, content, complete)
-            VALUES ($1, $2, $3, $4)
-            ON CONFLICT (page_name, date_key)
-            DO UPDATE SET 
-                content = EXCLUDED.content,
-                complete = EXCLUDED.complete,
-                updated_at = CURRENT_TIMESTAMP`,
-            [page_name, date_key, content, complete]
-        );
-        res.send('Note saved');
-    } catch (err) {
-        console.error('Error saving note:', err);
-        res.status(500).send('Error saving note');
-    }
-});
-
-app.get('/playlists/:page', async (req, res) => {
-    if (!req.session.loggedIn) return res.status(403).send('Forbidden');
-    const { page } = req.params;
-
-    try {
-        const { rows } = await pool.query(
-            `SELECT button_name, display_name, id, name, url, position
-            FROM playlist_queues
-            WHERE page_name = $1
-            ORDER BY button_name, position ASC`,
-            [page]
-        );
-
-        res.json(rows);
-    } catch (err) {
-        console.error('Error fetching playlists:', err);
-        res.status(500).send('Error fetching playlists');
-    }
-});
-
-app.post('/playlists/:page/manage', async (req, res) => {
-  if (!req.session.loggedIn) return res.status(403).send('Forbidden');
-
-  const { page } = req.params;
-  const { action, display_name, playlist } = req.body;
-
-  // ✅ NEW: normalize any "Button1", "button 1", etc. → "button1|2|3"
-  const canonButton = String(req.body.button_name || '')
-    .trim()
-    .toLowerCase()
-    .replace(/^button\s*([123])$/, 'button$1');
-
-  try {
-    if (action === 'add') {
-      const result = await pool.query(
-        `SELECT COALESCE(MAX(position), 0) + 1 AS next_pos
-         FROM playlist_queues
-         WHERE page_name = $1 AND button_name = $2`,
-        [page, canonButton]
-      );
-      const nextPos = result.rows[0].next_pos;
-
-      await pool.query(
-        `INSERT INTO playlist_queues (page_name, button_name, display_name, name, url, position)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [page, canonButton, display_name || '', playlist.name, playlist.url, nextPos]
-      );
-      return res.json({ success: true });
-    }
-
-    if (action === 'update') {
-      await pool.query(
-        `UPDATE playlist_queues
-         SET name = $1, url = $2
-         WHERE id = $3 AND page_name = $4 AND button_name = $5`,
-        [playlist.name, playlist.url, playlist.id, page, canonButton]
-      );
-      return res.json({ success: true });
-    }
-
-    if (action === 'delete') {
-      await pool.query(
-        `DELETE FROM playlist_queues
-         WHERE id = $1 AND page_name = $2 AND button_name = $3`,
-        [playlist.id, page, canonButton]
-      );
-      return res.json({ success: true });
-    }
-
-    if (action === 'setDisplayName') {
-      await pool.query(
-        `UPDATE playlist_queues
-         SET display_name = $1
-         WHERE page_name = $2 AND button_name = $3`,
-        [display_name, page, canonButton]
-      );
-      return res.json({ success: true });
-    }
-
-    res.status(400).json({ error: 'Invalid action' });
-  } catch (err) {
-    console.error('Error managing playlist:', err);
-    res.status(500).json({ error: 'Failed to manage playlist' });
-  }
-});
-
-
-app.post('/playlists/:page/play', async (req, res) => {
-    if (!req.session.loggedIn) return res.status(403).send('Forbidden');
-    const { page } = req.params;
-    const { button_name } = req.body;
-
-    try {
-        // Get playlists for button ordered by position
-        const { rows } = await pool.query(
-            `SELECT id, url FROM playlist_queues
-            WHERE page_name = $1 AND button_name = $2
-            ORDER BY position ASC`,
-            [page, button_name]
-        );
-
-        if (rows.length === 0) return res.status(404).send('No playlists found');
-
-        const firstPlaylist = rows[0];
-
-        // Rotate: move first to last
-        await pool.query(
-            `UPDATE playlist_queues
-            SET position = position - 1
-            WHERE page_name = $1 AND button_name = $2`,
-            [page, button_name]
-        );
-
-        await pool.query(
-            `UPDATE playlist_queues
-            SET position = (SELECT MAX(position)+1 FROM playlist_queues WHERE page_name=$1 AND button_name=$2)
-            WHERE id = $3`,
-            [page, button_name, firstPlaylist.id]
-        );
-
-        res.json({ url: firstPlaylist.url });
-    } catch (err) {
-        console.error('Error rotating playlists:', err);
-        res.status(500).send('Error playing playlist');
-    }
-});
-
-app.get('/manage-playlists', (req, res) => {
-    if (!req.session.loggedIn) {
-        req.session.redirectAfterLogin = '/manage-playlists';
-        return res.redirect('/login');
-    }
-    res.sendFile(path.join(__dirname, 'public', 'ManagePlaylists.html'));
-});
 
 app.listen(PORT, () => {
 console.log(`Server running at http://localhost:${PORT}`);
 });
 
-app.get('/playlist-popup', (req, res) => {
-    if (!req.session.loggedIn) {
-        req.session.redirectAfterLogin = '/playlist-popup';
-        return res.redirect('/login');
-    }
-    res.sendFile(path.join(__dirname, 'public', 'PlaylistManage.html'));
-});
+
