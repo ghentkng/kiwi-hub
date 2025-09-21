@@ -196,27 +196,22 @@ console.log(`Server running at http://localhost:${PORT}`);
 });
 
 //Period 1 playlist button
-// server.js
 app.get('/playlist-url/:name', async (req, res) => {
-    const { name } = req.params;
-
-    try {
-        const result = await pool.query(
-        `SELECT url
-        FROM playlists
-        WHERE display_name = $1
-        ORDER BY position ASC
-        LIMIT 1;`,
-        [name]
-        );
-
-        if (result.rows.length > 0) {
-        res.json({ url: result.rows[0].url });
-        } else {
-        res.status(404).json({ error: 'No URL found' });
-        }
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Server error' });
-    }
+  const displayName = req.params.name; // "1st Period"
+try {
+    const q = `
+    SELECT url
+    FROM public.playlist_queues
+    WHERE display_name = $1
+    ORDER BY position ASC
+    LIMIT 1;
+    `;
+    const r = await pool.query(q, [displayName]);
+    if (r.rows.length === 0 || !r.rows[0].url) return res.status(404).json({ error: 'Not found' });
+    res.json({ url: r.rows[0].url });
+} catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Server error' });
+}
 });
+

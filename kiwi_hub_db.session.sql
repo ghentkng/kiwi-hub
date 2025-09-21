@@ -1,6 +1,6 @@
 --DELETE FROM playlist_queues
 --WHERE name = 'Eileen Manzano';
-SELECT * FROM playlist_queues;
+--SELECT * FROM playlist_queues;
 
 --Change a value
 
@@ -20,3 +20,9 @@ INSERT INTO playlist_queues
 SELECT
 'cs1planning','button3',  '7th Period', pos, 'Ahmed Bashir','https://youtube.com/playlist?list=PLBK6XPuJsAHt9xMeP8FLSXhx9sEagDLNV&si=9uyjQswnAXzJZBe3'
 FROM nextpos;*/
+
+SELECT display_name, position, url
+FROM public.playlist_queues
+WHERE display_name = '1st Period'
+ORDER BY position ASC
+LIMIT 1;
