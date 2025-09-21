@@ -40,6 +40,24 @@
 
     </div>
 
+    <button id="button1">1st Period Playlists</button>
+    <script>
+    document.getElementById("openBtn").addEventListener("click", async () => {
+      try {
+        const response = await fetch("/playlist-url/2nd%20Period"); // example name
+        const data = await response.json();
+
+        if (data.url) {
+          window.open(data.url, "_blank"); // opens in new tab
+        } else {
+          alert("No URL found for this button");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Error fetching URL");
+      }
+    });
+    </script>
   </div>
 
 </body>
