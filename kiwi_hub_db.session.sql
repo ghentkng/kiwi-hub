@@ -25,5 +25,5 @@ FROM nextpos;*/
 
 SELECT name, position, url
 FROM public.playlist_queues
-WHERE display_name = '1st Period'
+WHERE display_name = '2nd Period'
 ORDER BY position ASC
