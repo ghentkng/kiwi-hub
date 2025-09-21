@@ -41,18 +41,19 @@
     </div>
 
     <button onclick="playNext('1st Period')" id="openBtn" type="button">1st Period Playlists</button>
+    <button onclick="playNext('2nd Period')" id="openBtn2" type="button">2nd Period Playlists</button>
 
 <script>
 async function playNext(displayName) {
-  const res = await fetch(`/playlist/${encodeURIComponent(displayName)}/consume-next`, { method: 'POST' });
-  const item = await res.json();
-
-  // Open whatever field stores your link (e.g., item.url or item.link)
-  // If you serve the URL from another endpoint, use it here instead.
-  if (item.url) window.open(item.url, '_blank');
-
-  // Optionally refresh your on-page list after rotation
-  // await refreshList(displayName);
+  try {
+    const response = await fetch(`/playlist-url/${encodeURIComponent(displayName)}`);
+    if (!response.ok) throw new Error("Not found");
+    const data = await response.json();
+    window.open(data.url, '_blank');   // open in new tab
+  } catch (err) {
+    console.error(err);
+    alert("No playlist found for " + displayName);
+  }
 }
 </script>
 

@@ -196,8 +196,8 @@ console.log(`Server running at http://localhost:${PORT}`);
 });
 
 //Period 1 playlist button
-app.get('/playlist-url/:name', async (req, res) => {
-  const displayName = req.params.name; // "1st Period"
+app.get('/playlist-url/:displayname', async (req, res) => {
+  const displayName = req.params; // "1st Period"
 try {
     const q = `
     SELECT url
