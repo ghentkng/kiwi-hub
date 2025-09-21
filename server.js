@@ -215,3 +215,50 @@ try {
 }
 });
 
+app.post('/playlist/move-to-end/:id', async (req, res) => {
+    const { id } = req.params;
+    const client = await pool.connect();
+    try {
+    await client.query('BEGIN');
+    const sql = `
+    WITH moved AS (
+        SELECT id, display_name, position AS old_pos
+        FROM playlist_queues
+        WHERE id = $1
+        FOR UPDATE
+    ),
+    shrink AS (
+        UPDATE playlist_queues pq
+        SET position = position - 1
+        FROM moved m
+        WHERE pq.display_name = m.display_name
+        AND pq.id <> m.id
+        AND pq.position > m.old_pos
+        RETURNING 1
+    ),
+    maxpos AS (
+        SELECT COALESCE(MAX(pq.position), 0) AS max_pos
+        FROM playlist_queues pq
+        JOIN moved m ON pq.display_name = m.display_name
+    ),
+    reposition AS (
+        UPDATE playlist_queues pq
+        SET position = (SELECT max_pos + 1 FROM maxpos)
+        FROM moved m
+        WHERE pq.id = m.id
+        RETURNING pq.*
+    )
+    SELECT * FROM reposition;
+    `;
+    const { rows } = await client.query(sql, [id]);
+    await client.query('COMMIT');
+    res.json(rows[0]);
+} catch (e) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: e.message });
+} finally {
+    client.release();
+}
+});
+
+
