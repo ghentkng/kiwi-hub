@@ -215,50 +215,55 @@ try {
 }
 });
 
-app.post('/playlist/move-to-end/:id', async (req, res) => {
-    const { id } = req.params;
+// POST /playlist/:displayName/consume-next
+app.post('/playlist/:displayName/consume-next', async (req, res) => {
+    const displayName = decodeURIComponent(req.params.displayName);
     const client = await pool.connect();
     try {
-    await client.query('BEGIN');
-    const sql = `
-    WITH moved AS (
-        SELECT id, display_name, position AS old_pos
-        FROM playlist_queues
-        WHERE id = $1
-        FOR UPDATE
-    ),
-    shrink AS (
-        UPDATE playlist_queues pq
-        SET position = position - 1
-        FROM moved m
-        WHERE pq.display_name = m.display_name
-        AND pq.id <> m.id
-        AND pq.position > m.old_pos
-        RETURNING 1
-    ),
-    maxpos AS (
-        SELECT COALESCE(MAX(pq.position), 0) AS max_pos
-        FROM playlist_queues pq
-        JOIN moved m ON pq.display_name = m.display_name
-    ),
-    reposition AS (
-        UPDATE playlist_queues pq
-        SET position = (SELECT max_pos + 1 FROM maxpos)
-        FROM moved m
-        WHERE pq.id = m.id
-        RETURNING pq.*
-    )
-    SELECT * FROM reposition;
-    `;
-    const { rows } = await client.query(sql, [id]);
-    await client.query('COMMIT');
-    res.json(rows[0]);
-} catch (e) {
-    await client.query('ROLLBACK');
-    res.status(500).json({ error: e.message });
-} finally {
-    client.release();
-}
+        await client.query('BEGIN');
+        const sql = `
+        WITH pick AS (
+            SELECT id, display_name, position AS old_pos
+            FROM playlist_queues
+            WHERE display_name = $1
+            ORDER BY position
+            FOR UPDATE
+            LIMIT 1
+        ),
+        shrink AS (
+            UPDATE playlist_queues pq
+            SET position = position - 1
+            FROM pick p
+            WHERE pq.display_name = p.display_name
+            AND pq.id <> p.id
+            AND pq.position > p.old_pos
+            RETURNING 1
+        ),
+        maxpos AS (
+            SELECT COALESCE(MAX(position), 0) AS max_pos
+            FROM playlist_queues
+            WHERE display_name = $1
+        ),
+        reposition AS (
+            UPDATE playlist_queues pq
+            SET position = (SELECT max_pos + 1 FROM maxpos)
+            FROM pick p
+            WHERE pq.id = p.id
+            RETURNING pq.*
+        )
+        SELECT * FROM reposition;
+        `;
+        const { rows } = await client.query(sql, [displayName]);
+        await client.query('COMMIT');
+        if (!rows[0]) return res.status(404).json({ error: 'No items for this display_name.' });
+        res.json(rows[0]); // includes the row you just “consumed” (now moved to end)
+    } catch (e) {
+        await client.query('ROLLBACK');
+        res.status(500).json({ error: e.message });
+    } finally {
+        client.release();
+    }
 });
+
 
 

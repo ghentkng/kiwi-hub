@@ -40,44 +40,20 @@
 
     </div>
 
-    <button id="openBtn" type="button">1st Period Playlists</button>
+    <button onclick="playNext('1st Period')" id="openBtn" type="button">1st Period Playlists</button>
 
 <script>
-  document.getElementById("openBtn").addEventListener("click", async () => {
-    // 1) open a tab synchronously to avoid popup blockers
-    const win = window.open("", "_blank");
+async function playNext(displayName) {
+  const res = await fetch(`/playlist/${encodeURIComponent(displayName)}/consume-next`, { method: 'POST' });
+  const item = await res.json();
 
-    // choose your display name here
-    const displayName = "1st Period";
-    const encoded = encodeURIComponent(displayName);
+  // Open whatever field stores your link (e.g., item.url or item.link)
+  // If you serve the URL from another endpoint, use it here instead.
+  if (item.url) window.open(item.url, '_blank');
 
-    try {
-      const res = await fetch(`/playlist-url/${encoded}`);
-      // Optional: handle non-200s cleanly
-      if (!res.ok) {
-        console.error("Non-200 from server:", res.status, res.statusText);
-        win.close();
-        alert(`No URL found for ${displayName} (status ${res.status}).`);
-        return;
-      }
-
-      const data = await res.json();
-      console.log("Server returned:", data);
-
-      if (data && data.url) {
-        // 2) navigate the tab we already opened
-        win.location = data.url;
-      } else {
-        win.close();
-        alert(`No URL found for ${displayName}.`);
-      }
-    } catch (err) {
-      console.error(err);
-      // close the pre-opened tab on error
-      if (win && !win.closed) win.close();
-      alert("Error fetching URL. Check server console/logs.");
-    }
-  });
+  // Optionally refresh your on-page list after rotation
+  // await refreshList(displayName);
+}
 </script>
 
   </div>
