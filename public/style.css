@@ -141,11 +141,33 @@ button:hover {
     font-weight: bold;
 }
 
-.java button{
+.java {
     background-color: #c47fac;
     color: white;
 }
 
-.java button:hover {
+.java:hover {
     background-color: #af759b;
+}
+
+.python {
+    background-color: #6fbbd8;
+    color: white;
+}
+
+.python:hover {
+    background-color: #57aaca;
+}
+
+.cs3 {
+    background-color: #b7997a;
+    color: white;
+}
+
+.cs3:hover {
+    background-color: #af8c69;
+}
+
+body[data-page="teaching"] {
+    background-color: #f1eaea;
 }
