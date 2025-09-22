@@ -141,33 +141,41 @@ button:hover {
     font-weight: bold;
 }
 
-.java {
+.java, .java button {
     background-color: #c47fac;
     color: white;
 }
 
-.java:hover {
+.java:hover , .java button:hover{
     background-color: #af759b;
 }
 
-.python {
+.python, .python button  {
     background-color: #6fbbd8;
     color: white;
 }
 
-.python:hover {
+.python:hover, .python button:hover {
     background-color: #57aaca;
 }
 
-.cs3 {
+.cs3, .cs3 button {
     background-color: #b7997a;
     color: white;
 }
 
-.cs3:hover {
+.cs3:hover, .cs3 button:hover {
     background-color: #af8c69;
 }
 
 body[data-page="teaching"] {
     background-color: #f1eaea;
+}
+
+.generic, .generic button{
+    background-color: #dad1d1;
+}
+
+.generic:hover, .generic button:hover{
+    background-color: #d9c6c6;
 }
