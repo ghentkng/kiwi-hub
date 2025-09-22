@@ -140,3 +140,12 @@ button:hover {
     margin-top: 10px;
     font-weight: bold;
 }
+
+.java button{
+    background-color: #c47fac;
+    color: white;
+}
+
+.java button:hover {
+    background-color: #af759b;
+}
