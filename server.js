@@ -195,4 +195,75 @@ app.listen(PORT, () => {
 console.log(`Server running at http://localhost:${PORT}`);
 });
 
+//Period 1 playlist button
+app.get('/playlist-url/:displayname', async (req, res) => {
+  const displayName = req.params; // "1st Period"
+try {
+    const q = `
+    SELECT url
+    FROM public.playlist_queues
+    WHERE display_name = $1
+    ORDER BY position ASC
+    LIMIT 1;
+    `;
+    const r = await pool.query(q, [displayName]);
+    if (r.rows.length === 0 || !r.rows[0].url) return res.status(404).json({ error: 'Not found' });
+    res.json({ url: r.rows[0].url });
+} catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Server error' });
+}
+});
+
+// POST /playlist/:displayName/consume-next
+app.post('/playlist/:displayName/consume-next', async (req, res) => {
+    const displayName = decodeURIComponent(req.params.displayName);
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        const sql = `
+        WITH pick AS (
+            SELECT id, display_name, position AS old_pos
+            FROM playlist_queues
+            WHERE display_name = $1
+            ORDER BY position
+            FOR UPDATE
+            LIMIT 1
+        ),
+        shrink AS (
+            UPDATE playlist_queues pq
+            SET position = position - 1
+            FROM pick p
+            WHERE pq.display_name = p.display_name
+            AND pq.id <> p.id
+            AND pq.position > p.old_pos
+            RETURNING 1
+        ),
+        maxpos AS (
+            SELECT COALESCE(MAX(position), 0) AS max_pos
+            FROM playlist_queues
+            WHERE display_name = $1
+        ),
+        reposition AS (
+            UPDATE playlist_queues pq
+            SET position = (SELECT max_pos + 1 FROM maxpos)
+            FROM pick p
+            WHERE pq.id = p.id
+            RETURNING pq.*
+        )
+        SELECT * FROM reposition;
+        `;
+        const { rows } = await client.query(sql, [displayName]);
+        await client.query('COMMIT');
+        if (!rows[0]) return res.status(404).json({ error: 'No items for this display_name.' });
+        res.json(rows[0]); // includes the row you just “consumed” (now moved to end)
+    } catch (e) {
+        await client.query('ROLLBACK');
+        res.status(500).json({ error: e.message });
+    } finally {
+        client.release();
+    }
+});
+
+
 

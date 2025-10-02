@@ -1,50 +1,3 @@
-/* 1) Register your two real files */
-@font-face {
-font-family: 'Mont';
-src: url('assets/fonts/mont/Mont-ExtraLightDEMO.otf') format('opentype');
-font-weight: 200;
-font-style: normal;
-font-display: swap;
-}
-
-@font-face {
-font-family: 'Mont';
-src: url('assets/fonts/mont/Mont-HeavyDEMO.otf') format('opentype');
-font-weight: 700;
-font-style: normal;
-font-display: swap;
-}
-
-/* 2) Alias missing weights so the browser never falls back */
-@font-face { font-family: 'Mont'; src: url('assets/fonts/Mont-ExtraLightDEMO.otf') format('opentype'); font-weight: 300; font-style: normal; }
-@font-face { font-family: 'Mont'; src: url('assets/fonts/Mont-ExtraLightDEMO.otf') format('opentype'); font-weight: 400; font-style: normal; }
-@font-face { font-family: 'Mont'; src: url('assets/fonts/Mont-ExtraLightDEMO.otf') format('opentype'); font-weight: 500; font-style: normal; }
-@font-face { font-family: 'Mont'; src: url('assets/fonts/Mont-HeavyDEMO.otf')       format('opentype'); font-weight: 600; font-style: normal; }
-@font-face { font-family: 'Mont'; src: url('assets/fonts/Mont-HeavyDEMO.otf')       format('opentype'); font-weight: 700; font-style: normal; }
-@font-face { font-family: 'Mont'; src: url('assets/fonts/Mont-HeavyDEMO.otf')       format('opentype'); font-weight: 800; font-style: normal; }
-
-/* 3) Apply everywhere, once */
-html {
-    font-family: 'Mont', sans-serif;
-  font-synthesis-weight: none;  /* don’t fake bold */
-}
-
-*, *::before, *::after {
-    font-family: inherit;
-}
-
-/* 4) Make headings inherit the normal flow instead of forcing bold */
-h1, h2, h3, h4, h5, h6 { font-weight: 700; } /* true heavy */
-
-button,
-input,
-select,
-textarea,
-optgroup,
-option {
-  font: inherit;            /* inherits family, size, weight, line-height */
-}
-
 /* (optional) some UAs keep a special style on controls */
 button,
 input,
@@ -186,4 +139,43 @@ button:hover {
     color: red;
     margin-top: 10px;
     font-weight: bold;
+}
+
+.java, .java button {
+    background-color: #c47fac;
+    color: white;
+}
+
+.java:hover , .java button:hover{
+    background-color: #af759b;
+}
+
+.python, .python button  {
+    background-color: #6fbbd8;
+    color: white;
+}
+
+.python:hover, .python button:hover {
+    background-color: #57aaca;
+}
+
+.cs3, .cs3 button {
+    background-color: #b7997a;
+    color: white;
+}
+
+.cs3:hover, .cs3 button:hover {
+    background-color: #af8c69;
+}
+
+body[data-page="teaching"] {
+    background-color: #f1eaea;
+}
+
+.generic, .generic button{
+    background-color: #dad1d1;
+}
+
+.generic:hover, .generic button:hover{
+    background-color: #d9c6c6;
 }
