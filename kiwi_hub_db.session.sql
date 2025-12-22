@@ -1,3 +1,5 @@
+SELECT * FROM submissions;
+
 --DELETE FROM playlist_queues
 --WHERE name = 'Eileen Manzano';
 --SELECT * FROM playlist_queues;
@@ -22,8 +24,3 @@ SELECT
 FROM nextpos;*/
 
 --View entire class period
-
-SELECT name, position, url
-FROM public.playlist_queues
-WHERE display_name = '2nd Period'
-ORDER BY position ASC
