@@ -265,9 +265,6 @@ app.post('/playlist/:displayName/consume-next', async (req, res) => {
     }
 });
 
-const fs = require("fs");
-const path = require("path");
-
 app.get("/api/references", requireLogin, (req, res) => {
   try {
     const filePath = path.join(__dirname, "references.json");
