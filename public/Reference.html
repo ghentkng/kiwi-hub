@@ -9,6 +9,45 @@
     <link rel="icon" type="image/png" href="/assets/kiwi-hublogocolorLARGE.png">
 
 </head>
+
+<script>
+async function loadReferences() {
+  try {
+    const res = await fetch("/api/references", {
+      credentials: "include"
+    });
+
+    if (!res.ok) {
+      document.getElementById("referenceList").innerHTML =
+        "<p>Could not load references.</p>";
+      return;
+    }
+
+    const links = await res.json();
+    const container = document.getElementById("referenceList");
+    container.innerHTML = "";
+
+    links.forEach(link => {
+      const a = document.createElement("a");
+      a.href = link.url;
+      a.textContent = link.title;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+
+      const div = document.createElement("div");
+      div.appendChild(a);
+      container.appendChild(div);
+    });
+
+  } catch (err) {
+    console.error(err);
+    document.getElementById("referenceList").innerHTML =
+      "<p>Error loading references.</p>";
+  }
+}
+
+loadReferences();
+</script>
 <body>
 
     <h2>Johnson Quick Guide</h2>
@@ -26,6 +65,7 @@
     <ul>
         <li><a href="https://sites.google.com/neisd.net/wc-faculty-resources/home">Charger U</a></li>
         <li><a href="https://northeast.schoolobjects.com/eduphoria_webcontrols/Applications.aspx">Eduphoria</a></li>
+        <a id="Eduphora" href="#" target="_blank">Eduphoria</a>
         <li><a href="https://docs.google.com/spreadsheets/d/1sK1Yn0ddejE7aYsu3qgOO0aJi4wMhUkIHvAkE9spWCw/edit?pli=1&gid=0#gid=0">Lesson Plans</a></li>
         <li>If absent, email Bea, Harris, Rochelle Gutierrez</li>
         <li>Wednesdays:<ul>
