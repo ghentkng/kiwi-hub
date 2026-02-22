@@ -24,6 +24,21 @@ async function loadReferences() {
     }
 
     const links = await res.json();
+
+    console.log("Loaded links:", links);
+
+document.querySelectorAll("[data-ref]").forEach(a => {
+  const title = a.getAttribute("data-ref");
+  const match = links.find(link => link.title === title);
+
+  console.log("Looking for:", title, "->", match);
+
+  if (match) {
+    a.href = match.url;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+  }
+});
     const container = document.getElementById("referenceList");
     container.innerHTML = "";
 
