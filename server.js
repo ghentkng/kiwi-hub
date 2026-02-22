@@ -280,9 +280,6 @@ app.get("/api/references", requireLogin, (req, res) => {
   }
 });
 
-const fs = require("fs");
-const path = require("path");
-
 app.get("/api/references", (req, res) => {
   if (!req.session.loggedIn) {
     return res.status(401).json({ error: "Not logged in" });
