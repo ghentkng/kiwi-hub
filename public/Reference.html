@@ -13,51 +13,32 @@
 <script>
 async function loadReferences() {
   try {
-    const res = await fetch("/api/references", {
-      credentials: "include"
-    });
+    const res = await fetch("/api/references", { credentials: "include" });
 
     if (!res.ok) {
-      document.getElementById("referenceList").innerHTML =
-        "<p>Could not load references.</p>";
+      console.error("Could not load references:", res.status);
       return;
     }
 
     const links = await res.json();
 
-    console.log("Loaded links:", links);
+    document.querySelectorAll("a[data-ref]").forEach(a => {
+      const title = a.getAttribute("data-ref");
+      const match = links.find(link => link.title === title);
 
-document.querySelectorAll("[data-ref]").forEach(a => {
-  const title = a.getAttribute("data-ref");
-  const match = links.find(link => link.title === title);
-
-  console.log("Looking for:", title, "->", match);
-
-  if (match) {
-    a.href = match.url;
-    a.target = "_blank";
-    a.rel = "noopener noreferrer";
-  }
-});
-    const container = document.getElementById("referenceList");
-    container.innerHTML = "";
-
-    links.forEach(link => {
-      const a = document.createElement("a");
-      a.href = link.url;
-      a.textContent = link.title;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-
-      const div = document.createElement("div");
-      div.appendChild(a);
-      container.appendChild(div);
+      if (match) {
+        a.href = match.url;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+      } else {
+        console.warn("No match for:", title);
+        // optional: visually show it's missing
+        // a.style.opacity = "0.5";
+      }
     });
 
   } catch (err) {
-    console.error(err);
-    document.getElementById("referenceList").innerHTML =
-      "<p>Error loading references.</p>";
+    console.error("Error loading references:", err);
   }
 }
 
