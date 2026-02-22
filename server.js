@@ -265,7 +265,11 @@ app.post('/playlist/:displayName/consume-next', async (req, res) => {
     }
 });
 
-app.get("/api/references", requireLogin, (req, res) => {
+app.get("/api/references", (req, res) => {
+  if (!req.session.loggedIn) {
+    return res.status(401).json({ error: "Not logged in" });
+  }
+
   try {
     const filePath = path.join(__dirname, "references.json");
     const raw = fs.readFileSync(filePath, "utf8");
