@@ -11,6 +11,40 @@
 
   <link rel="icon" type="image/png" href="/assets/kiwi-hublogocolorLARGE.png" />
 </head>
+<script>
+async function loadReferences() {
+  try {
+    const res = await fetch("/api/references", { credentials: "include" });
+
+    if (!res.ok) {
+      console.error("Could not load references:", res.status);
+      return;
+    }
+
+    const links = await res.json();
+
+    document.querySelectorAll("a[data-ref]").forEach(a => {
+      const title = a.getAttribute("data-ref");
+      const match = links.find(link => link.title === title);
+
+      if (match) {
+        a.href = match.url;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+      } else {
+        console.warn("No match for:", title);
+        // optional: visually show it's missing
+        // a.style.opacity = "0.5";
+      }
+    });
+
+  } catch (err) {
+    console.error("Error loading references:", err);
+  }
+}
+
+loadReferences();
+</script>
 
 <body data-page="teaching">
   <div id="page-wrapper">
@@ -25,6 +59,7 @@
       <a class = "python" href="https://codehs.com/app/access_controls_and_due_dates/section/717869" target="_blank"><button type="button">CodeHS Unlock (1)</button></a>
       <a class = "python" href="https://classroom.google.com/c/Nzg5ODU1MzUyMDI3" target="_blank"><button type="button">Google Classroom (1)</button></a>
       <a class = "python" href="https://codehs.com/sandbox/id/python-demo-YX7ecK" target="_blank"><button type="button">Python Sandbox</button></a>
+      <a data-ref="CS1 Warm Ups" href="#" class = "python"><button type="button">CS1 Warm Ups</button></a>
       <button class = "python" onclick="playNext('1st Period')" id="button1" type="button">1st Period Playlists</button>
 
       <h3>2nd Period</h3>

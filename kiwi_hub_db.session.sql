@@ -1,4 +1,5 @@
-SELECT * FROM submissions;
+SELECT *
+FROM submissions;
 
 --DELETE FROM playlist_queues
 --WHERE name = 'Eileen Manzano';
@@ -24,3 +25,4 @@ SELECT
 FROM nextpos;*/
 
 --View entire class period
+
