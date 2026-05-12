@@ -180,3 +180,24 @@ body[data-page="teaching"] {
 .generic:hover, .generic button:hover{
     background-color: #d9c6c6;
 }
+
+#quick-links-container {
+  display: grid;
+  /* Creates 3 columns of equal width */
+  grid-template-columns: repeat(3, 1fr); 
+  gap: 20px; /* Space between the columns */
+  align-items: start;
+}
+
+/* Make it responsive: 1 column on mobile, 2 on tablets */
+@media (max-width: 1024px) {
+  #quick-links-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  #quick-links-container {
+    grid-template-columns: 1fr;
+  }
+}
