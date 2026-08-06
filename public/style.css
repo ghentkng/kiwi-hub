@@ -199,11 +199,10 @@ grid-template-columns: repeat(6, 1fr);
 
 #teaching-links-container-half-page {
   display: grid;
-  grid-template-columns: repeat(4, 200px);
+  grid-template-columns: repeat(4, max-content);
+  justify-content: start;
   align-items: start;
   gap: .5rem;
-  width: fit-content;
-  max-width: 1100px;
 }
 
 /* Make it responsive: 1 column on mobile, 2 on tablets */
