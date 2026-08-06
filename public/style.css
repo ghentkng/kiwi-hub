@@ -197,21 +197,14 @@ grid-template-columns: repeat(6, 1fr);
   align-items: start;
 }
 
-/* Container reset */
 #teaching-links-container-half-page {
-  display: flex !important;
-  flex-direction: row !important;
-  justify-content: flex-start !important;
-  align-items: flex-start !important;
-  gap: 0.5rem !important; /* Enforces an exact 8px gap */
-  width: fit-content !important;
-}
-
-/* Force-reset any hidden margins or fixed widths on the 4 columns */
-#teaching-links-container-half-page > * {
-  margin: 0 !important;
-  width: auto !important;
-  flex: 0 0 auto !important;
+  display: grid;
+  grid-template-columns: repeat(4, 200);
+ 
+  /*align-items: start;*/
+  /*gap: 1.25rem;*/
+  /*width: 100%;*/
+  /*max-width: 1100px;*/
 }
 
 /* Make it responsive: 1 column on mobile, 2 on tablets */
