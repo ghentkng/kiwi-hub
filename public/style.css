@@ -190,6 +190,15 @@ body[data-page="teaching"] {
     background-color: #d9c6c6;
 }
 
+.teachingbutton {
+    border: none;
+    border-radius: 4px;
+    margin-top: 10px;
+    padding: 10px 20px;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
 #quick-links-container {
   display: grid;
   /* Creates 3 columns of equal width */
