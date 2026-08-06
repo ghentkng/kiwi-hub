@@ -151,6 +151,15 @@ button:hover {
     background-color: #af759b;
 }
 
+.fundamentals, .fundamentals button {
+    background-color: #69b17f;
+    color: white;
+}
+
+.fundamentals:hover , .fundamentals button:hover{
+    background-color: #559668;
+}
+
 .python, .python button  {
     background-color: #6fbbd8;
     color: white;
@@ -186,6 +195,14 @@ body[data-page="teaching"] {
   /* Creates 3 columns of equal width */
 grid-template-columns: repeat(6, 1fr);  
   align-items: start;
+}
+
+#teaching-links-container-half-page {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 4), 1fr);
+  align-items: start;
+  gap: var(--gap, 1rem);
+  width: var(--width, 50%);
 }
 
 /* Make it responsive: 1 column on mobile, 2 on tablets */
