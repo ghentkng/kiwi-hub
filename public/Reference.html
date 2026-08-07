@@ -11,7 +11,7 @@
 </head>
 
 <script>
-async function loadReferences() {
+async function loadReferences() { //for links only
   try {
     const res = await fetch("/api/references", { credentials: "include" });
 
@@ -42,20 +42,39 @@ async function loadReferences() {
   }
 }
 
+async function loadTextReferences() {
+  try {
+    const res = await fetch("/api/references", { credentials: "include" });
+
+    if (!res.ok) {
+      console.error("Could not load text references:", res.status);
+      return;
+    }
+
+    const items = await res.json();
+
+    // Targets elements with data-ref, but ignores <a> tags entirely
+    document.querySelectorAll("[data-ref]:not(a)").forEach(el => {
+      const title = el.getAttribute("data-ref");
+      const match = items.find(item => item.title === title);
+
+      if (match) {
+        // Replace 'match.text' with whichever API property holds your text value (e.g. match.url, match.content)
+        el.textContent = match.text || match.url; 
+      } else {
+        console.warn("No match for:", title);
+      }
+    });
+
+  } catch (err) {
+    console.error("Error loading text references:", err);
+  }
+}
+
+loadTextReferences();
 loadReferences();
 </script>
 <body>
-
-    <h2>Johnson Quick Guide</h2>
-    <ul>
-        <li>If absent, email Mrs. Ruiz, Mrs. Jacobs, and Mrs. Cox and share lesson plans.</li>
-        <li>Carla Jacobs - CTE dept chair</li>
-        <li>Carol Clemens and San Juanita Ruiz - AP admin assistants</li>
-        <li>Monica McCool - nurse</li>
-        <li>2 grades / week</li>
-        <li>Classroom E315</li>
-
-    </ul>
 
     <h2>Churchill Quick Guide</h2>
     <ul>
@@ -65,7 +84,7 @@ loadReferences();
         <li><a data-ref="IBC App" href="#">IBC App</a></li>
         <li><a data-ref="XDuty Stations S2026" href="#">Duty Stations S2026</a></li>
 
-        <li>If absent, email Bea, Harris, Rachelle Gutierrez</li>
+        <li>If absent, email Bea</li>
         <li>Wednesdays:<ul>
             <li>(1) Faculty Meeting</li>
             <li>(2) Department Meeting</li>
@@ -80,6 +99,8 @@ loadReferences();
                 <li>Assessment</li>
             </ul>
         </li>
+        <li>Use Skyward for discipline, Aware for parent contact (some situations might require both)</li>
+        <li><p data-ref="504 contact"></p></li>
         <li>Academic Integrity Links
             <ul><a href="https://d16k74nzx9emoe.cloudfront.net/0fe4927c-0dbb-4d28-b446-b99ee82c49b0/NEISD%20SCOC%202025-26%20Approved.pdf">Student Code of Conduct</a></ul>
             <ul><a href="https://www.neisd.net/_global-documents/District%20Policies/Electronic%20Communication%20and%20Data%20Management%20Policies/Student%20Acceptable%20Use%20Policy.pdf">Student AUP</a></ul>
@@ -91,33 +112,15 @@ loadReferences();
         <li>
             <p>Churchill: Instructions are on the teacher desk.
                 Subs must be on campus 30 min. before the starting time of the 1st class being covered.
-                Know that this job also requires for the sub to stay 30 min. after the class is finished.
-                The 1st class being covered begins at 8:55am and the last class being covered ends at 12:40pm (1:00pm on Thursdays) (please talk to sub coordinator about plans for 4th period).
+                Know that this job also requires for the sub to stay 30 min. after the class is finished.</p>
+
+            <p> (1st half) The 1st class being covered begins at 8:55am and the last class being covered ends at 12:40pm (1:00pm on Thursdays).
                 The subs hired for half a day are required to cover the entire 4 periods (half of a work day). Thank you!</p>
-            <p>Johnson: Instructions are on the teacher desk.
-                For afternoon assignments, subs must be on campus starting at 12:20pm.
-                The 1st class being covered begins at 12:45pm (1:05pm on Thursdays) and the last class being covered ends at 4:20pm (please talk to sub coordinator about plans for 5th and 8th periods). Thank you!</p>
+            <p> (2nd half) For afternoon assignments, subs must be on campus starting at 12:20pm.
+                The 1st class being covered begins at 12:45pm (1:05pm on Thursdays) and the last class being covered ends at 4:25pm. Thank you!</p>
+            <p> (full day) The 1st class being covered begins at 8:55am and the last class being covered ends at 4:25pm. Thank you!</p>
         </li>
     </ul>
-
-    <h2>TODO Items</h2>
-    <span style="display:inline-block">
-
-        <input type="checkbox" id="three" name="option1" value="yes">
-        <label for="three">Read Johnson handbook</label><br>
-        <input type="checkbox" id="ten" name="option1" value="yes">
-        <label for="ten">Harris email about Github, AI</label><br>
-        <label> <input type="checkbox"> CTE GC Videos</label><br>
-
-    </span>
-    
-    
-    <h5>IBCs for CS3?</h5>
-    <h5>Google Video</h5>
-    <h5>Mural</h5>
-
-
-
 
 </body>
 </html>
