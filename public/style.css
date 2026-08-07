@@ -117,7 +117,7 @@ button,.choosebtn {
 }
 
 button {
-    width: 50%;
+    /*width: 50%;*/
     background-color: #559c7f;
     color: rgb(103, 47, 47);
     border: none;
