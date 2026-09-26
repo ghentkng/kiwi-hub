@@ -1,5 +1,11 @@
-SELECT *
-FROM submissions;
+--SELECT * FROM
+UPDATE submissions
+--DELETE 
+SET assignment_name = 'Unit 1 Project - Solve a Problem (CS3)'
+--FROM submissions
+--WHERE student_names LIKE '%Damon%';
+WHERE id = '811';
+--
 
 --DELETE FROM playlist_queues
 --WHERE name = 'Eileen Manzano';
