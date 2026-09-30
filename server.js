@@ -1,7 +1,8 @@
 // server.js
 
 const { Pool } = require('pg');
-const {S3Client} = require('@aws-sdk/client-s3');
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 const multer = require('multer');
@@ -200,20 +201,21 @@ app.get('/reference', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'Reference.html'));
 });
 
+//delete me TODO
 app.get('/test-b2', async (req, res) => {
     try {
-        const { PutObjectCommand } = require('@aws-sdk/client-s3');
-
-        await s3.send(new PutObjectCommand({
+        const command = new PutObjectCommand({
             Bucket: process.env.B2_BUCKET_NAME,
-            Key: 'test/kiwi-hub-test.txt',
-            Body: 'Kiwi-Hub B2 test'
-        }));
+            Key: 'test/kiwi-hub-presigned-test.txt',
+            ContentType: 'text/plain'
+        });
 
-        res.send('B2 upload successful!');
+        const url = await getSignedUrl(s3, command, { expiresIn: 300 });
+
+        res.json({ url });
     } catch (err) {
-        console.error('B2 test error:', err);
-        res.status(500).send('B2 upload failed.');
+        console.error('B2 presigned URL test error:', err);
+        res.status(500).send('B2 presigned URL failed.');
     }
 });
 
