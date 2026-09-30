@@ -200,7 +200,20 @@ app.get('/reference', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'Reference.html'));
 });
 
+app.get('/test-b2', async (req, res) => {
+    try {
+        const { HeadBucketCommand } = require('@aws-sdk/client-s3');
 
+        await s3.send(new HeadBucketCommand({
+            Bucket: process.env.B2_BUCKET_NAME
+        }));
+
+        res.send('B2 connection successful!');
+    } catch (err) {
+        console.error('B2 test error:', err);
+        res.status(500).send('B2 connection failed.');
+    }
+});
 app.listen(PORT, () => {
 console.log(`Server running at http://localhost:${PORT}`);
 });
