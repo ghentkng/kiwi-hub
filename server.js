@@ -204,55 +204,8 @@ app.get('/reference', (req, res) => {
 });
 
 //delete me TODO
-app.get('/test-b2-delete', async (req, res) => {
-    try {
-        await s3.send(new DeleteObjectCommand({
-            Bucket: process.env.B2_BUCKET_NAME,
-            Key: 'test/kiwi-hub-test.txt'
-        }));
-
-        res.send('B2 test file deleted successfully!');
-    } catch (err) {
-        console.error('B2 delete test error:', err);
-        res.status(500).send('B2 delete failed.');
-    }
-});
 
 
-app.get('/test-postgres-lo', async (req, res) => {
-    const client = await pool.connect();
-
-    try {
-        await client.query('BEGIN');
-
-        const man = new LargeObjectManager({ pg: client });
-
-        const [oid, stream] = await man.createAndWritableStreamAsync(16384);
-
-        stream.write(Buffer.from('Kiwi-Hub PostgreSQL Large Object test'));
-        stream.end();
-
-        await new Promise((resolve, reject) => {
-            stream.on('finish', resolve);
-            stream.on('error', reject);
-        });
-
-        await client.query(
-            'INSERT INTO submissions (student_names, class_period, assignment_name, code, archived, file_oid) VALUES ($1, $2, $3, $4, $5, $6)',
-            ['TEST', 'TEST', 'TEST', 'TEST', false, oid]
-        );
-
-        await client.query('COMMIT');
-
-        res.send(`PostgreSQL Large Object test successful! OID: ${oid}`);
-    } catch (err) {
-        await client.query('ROLLBACK');
-        console.error('PostgreSQL Large Object test error:', err);
-        res.status(500).send('PostgreSQL Large Object test failed.');
-    } finally {
-        client.release();
-    }
-});
 
 app.listen(PORT, () => {
 console.log(`Server running at http://localhost:${PORT}`);
