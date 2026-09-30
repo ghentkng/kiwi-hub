@@ -2,7 +2,7 @@
 
 const { Pool } = require('pg');
 const { LargeObjectManager } = require('pg-large-object');
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
@@ -204,20 +204,17 @@ app.get('/reference', (req, res) => {
 });
 
 //delete me TODO
-app.get('/test-b2', async (req, res) => {
+app.get('/test-b2-delete', async (req, res) => {
     try {
-        const command = new PutObjectCommand({
+        await s3.send(new DeleteObjectCommand({
             Bucket: process.env.B2_BUCKET_NAME,
-            Key: 'test/kiwi-hub-presigned-test.txt',
-            ContentType: 'text/plain'
-        });
+            Key: 'test/kiwi-hub-test.txt'
+        }));
 
-        const url = await getSignedUrl(s3, command, { expiresIn: 300 });
-
-        res.json({ url });
+        res.send('B2 test file deleted successfully!');
     } catch (err) {
-        console.error('B2 presigned URL test error:', err);
-        res.status(500).send('B2 presigned URL failed.');
+        console.error('B2 delete test error:', err);
+        res.status(500).send('B2 delete failed.');
     }
 });
 
