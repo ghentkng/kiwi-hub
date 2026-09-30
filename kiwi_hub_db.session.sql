@@ -1,4 +1,4 @@
---SELECT * FROM
+/*--SELECT * FROM
 UPDATE submissions
 --DELETE 
 SET assignment_name = 'Unit 1 Project - Solve a Problem (CS3)'
@@ -6,6 +6,14 @@ SET assignment_name = 'Unit 1 Project - Solve a Problem (CS3)'
 --WHERE student_names LIKE '%Damon%';
 WHERE id = '811';
 --
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_name = 'submissions'
+ORDER BY ordinal_position;*/
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_name = 'submissions'
+ORDER BY ordinal_position;
 
 --DELETE FROM playlist_queues
 --WHERE name = 'Eileen Manzano';

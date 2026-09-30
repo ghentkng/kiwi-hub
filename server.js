@@ -1,6 +1,7 @@
 // server.js
 
 const { Pool } = require('pg');
+const { LargeObjectManager } = require('pg-large-object');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -17,6 +18,7 @@ const session = require('express-session');
 const path = require('path');
 const fs = require('fs');
 require('dotenv').config();
+
 
 const s3 = new S3Client({
     endpoint:process.env.B2_ENDPOINT,
@@ -216,6 +218,42 @@ app.get('/test-b2', async (req, res) => {
     } catch (err) {
         console.error('B2 presigned URL test error:', err);
         res.status(500).send('B2 presigned URL failed.');
+    }
+});
+
+
+app.get('/test-postgres-lo', async (req, res) => {
+    const client = await pool.connect();
+
+    try {
+        await client.query('BEGIN');
+
+        const man = new LargeObjectManager({ pg: client });
+
+        const [oid, stream] = await man.createAndWritableStreamAsync(16384);
+
+        stream.write(Buffer.from('Kiwi-Hub PostgreSQL Large Object test'));
+        stream.end();
+
+        await new Promise((resolve, reject) => {
+            stream.on('finish', resolve);
+            stream.on('error', reject);
+        });
+
+        await client.query(
+            'INSERT INTO submissions (student_names, class_period, assignment_name, code, archived, file_oid) VALUES ($1, $2, $3, $4, $5, $6)',
+            ['TEST', 'TEST', 'TEST', 'TEST', false, oid]
+        );
+
+        await client.query('COMMIT');
+
+        res.send(`PostgreSQL Large Object test successful! OID: ${oid}`);
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error('PostgreSQL Large Object test error:', err);
+        res.status(500).send('PostgreSQL Large Object test failed.');
+    } finally {
+        client.release();
     }
 });
 
