@@ -10,9 +10,9 @@ SELECT column_name, data_type
 FROM information_schema.columns
 WHERE table_name = 'submissions'
 ORDER BY ordinal_position;*/
-DELETE FROM submissions
-WHERE student_names = 'TEST'
-  AND assignment_name = 'TEST';
+ALTER TABLE submissions
+ADD COLUMN b2_key text,
+ADD COLUMN upload_status varchar(20);
 
 --DELETE FROM playlist_queues
 --WHERE name = 'Eileen Manzano';

@@ -3,6 +3,7 @@
 const { Pool } = require('pg');
 const { LargeObjectManager } = require('pg-large-object');
 const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const crypto = require('crypto');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
@@ -203,8 +204,64 @@ app.get('/reference', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'Reference.html'));
 });
 
-//delete me TODO
 
+app.post('/submit/init', async (req, res) => {
+    try {
+        const {
+            studentNames,
+            classPeriod,
+            assignmentName,
+            code
+        } = req.body;
+
+        if (!studentNames || !classPeriod || !assignmentName || !code) {
+            return res.status(400).json({
+                error: 'Missing required submission information.'
+            });
+        }
+
+        const b2Key = `submissions/${crypto.randomUUID()}.zip`;
+
+        const result = await pool.query(
+            `INSERT INTO submissions
+            (student_names, class_period, assignment_name, code, archived, b2_key, upload_status)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING id`,
+            [
+                studentNames,
+                classPeriod,
+                assignmentName,
+                code,
+                false,
+                b2Key,
+                'pending'
+            ]
+        );
+
+        const submissionId = result.rows[0].id;
+
+        const command = new PutObjectCommand({
+            Bucket: process.env.B2_BUCKET_NAME,
+            Key: b2Key,
+            ContentType: 'application/zip'
+        });
+
+        const uploadUrl = await getSignedUrl(s3, command, {
+            expiresIn: 300
+        });
+
+        res.json({
+            submissionId,
+            uploadUrl
+        });
+
+    } catch (err) {
+        console.error('Submission initialization error:', err);
+        res.status(500).json({
+            error: 'Could not initialize submission.'
+        });
+    }
+});
 
 
 app.listen(PORT, () => {
