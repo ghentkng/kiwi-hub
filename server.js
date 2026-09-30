@@ -1,6 +1,7 @@
 // server.js
 
 const { Pool } = require('pg');
+const {S3Client} = require('@aws-sdk/client-s3');
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 const multer = require('multer');
@@ -15,6 +16,15 @@ const session = require('express-session');
 const path = require('path');
 const fs = require('fs');
 require('dotenv').config();
+
+const s3 = new S3Client({
+    endpoint:process.env.B2_ENDPOINT,
+    region: 'us-west-004',
+    credentials:{
+        accessKeyId: process.env.B2_KEY_ID,
+        secretAccessKey: process.env.B2_APPLICATION_KEY
+    }
+});
 
 const app = express();
 const PORT = process.env.PORT || 3000;

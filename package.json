@@ -19,6 +19,8 @@
   "homepage": "https://github.com/ghentkng/kiwi-hub#readme",
   "description": "",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1143.0",
+    "@aws-sdk/s3-request-presigner": "^3.1143.0",
     "dotenv": "^17.2.0",
     "express": "^5.1.0",
     "express-session": "^1.18.2",
