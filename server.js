@@ -2,7 +2,12 @@
 
 const { Pool } = require('pg');
 const { LargeObjectManager } = require('pg-large-object');
-const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const {
+    S3Client,
+    PutObjectCommand,
+    GetObjectCommand,
+    DeleteObjectCommand
+} = require('@aws-sdk/client-s3');
 const crypto = require('crypto');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -116,27 +121,127 @@ res.sendFile(path.join(__dirname, 'public', 'SubmissionsDashboard.html'));
 });
 
 app.get('/download/:id', async (req, res) => {
-    if (!req.session.loggedIn) return res.status(403).send('Forbidden');
+    if (!req.session.loggedIn) {
+        return res.status(403).send('Forbidden');
+    }
 
     const { id } = req.params;
     const { code } = req.query;
 
     try {
-        const { rows } = await pool.query('SELECT * FROM submissions WHERE id = $1', [id]);
+        const { rows } = await pool.query(
+            `SELECT id, code, file_data, file_oid
+             FROM submissions
+             WHERE id = $1`,
+            [id]
+        );
+
         const submission = rows[0];
 
-        if (!submission) return res.status(404).send('Submission not found');
-        if (submission.code !== code) return res.status(403).send('Invalid code');
+        if (!submission) {
+            return res.status(404).send('Submission not found');
+        }
 
-        // Send the zip file from file_data in DB
-        res.setHeader('Content-Disposition', `attachment; filename=submission-${id}.zip`);
+        if (submission.code !== code) {
+            return res.status(403).send('Invalid code');
+        }
+
+        res.setHeader(
+            'Content-Disposition',
+            `attachment; filename=submission-${id}.zip`
+        );
         res.setHeader('Content-Type', 'application/zip');
-        console.log('Buffer size at download:', submission.file_data ? submission.file_data.length : 'no buffer');
 
-        res.end(Buffer.from(submission.file_data), 'binary');
+        // New submissions use PostgreSQL Large Objects
+        if (submission.file_oid) {
+            const client = await pool.connect();
+
+            try {
+                await client.query('BEGIN');
+
+                const man = new LargeObjectManager({ pg: client });
+
+                const [size, stream] =
+                    await man.openAndReadableStreamAsync(
+                        submission.file_oid,
+                        16384
+                    );
+
+                console.log(
+                    'Streaming PostgreSQL Large Object:',
+                    size,
+                    'bytes'
+                );
+
+                stream.on('error', async (err) => {
+                    console.error(
+                        'Large Object download error:',
+                        err
+                    );
+
+                    try {
+                        await client.query('ROLLBACK');
+                    } catch {}
+
+                    client.release();
+
+                    if (!res.headersSent) {
+                        res.status(500).end();
+                    } else {
+                        res.destroy();
+                    }
+                });
+
+                stream.on('end', async () => {
+                    try {
+                        await client.query('COMMIT');
+                    } catch (err) {
+                        console.error(
+                            'Large Object transaction commit error:',
+                            err
+                        );
+                    }
+
+                    client.release();
+                });
+
+                stream.pipe(res);
+                return;
+
+            } catch (err) {
+                try {
+                    await client.query('ROLLBACK');
+                } catch {}
+
+                client.release();
+                throw err;
+            }
+        }
+
+        // Old submissions still use file_data
+        if (submission.file_data) {
+            console.log(
+                'Sending old bytea submission:',
+                submission.file_data.length,
+                'bytes'
+            );
+
+            return res.end(
+                Buffer.from(submission.file_data),
+                'binary'
+            );
+        }
+
+        return res.status(404).send(
+            'Submission file not found'
+        );
+
     } catch (err) {
-        console.error(err);
-        res.status(500).send('Database query failed');
+        console.error('Download error:', err);
+
+        if (!res.headersSent) {
+            res.status(500).send('Database query failed');
+        }
     }
 });
 
@@ -260,6 +365,119 @@ app.post('/submit/init', async (req, res) => {
         res.status(500).json({
             error: 'Could not initialize submission.'
         });
+    }
+});
+
+app.post('/submit/complete', async (req, res) => {
+    const { submissionId } = req.body;
+
+    if (!submissionId) {
+        return res.status(400).json({
+            error: 'Missing submission ID.'
+        });
+    }
+
+    const client = await pool.connect();
+
+    try {
+        const result = await client.query(
+            `SELECT id, b2_key, upload_status
+             FROM submissions
+             WHERE id = $1`,
+            [submissionId]
+        );
+
+        const submission = result.rows[0];
+
+        if (!submission) {
+            return res.status(404).json({
+                error: 'Submission not found.'
+            });
+        }
+
+        if (submission.upload_status !== 'pending') {
+            return res.status(400).json({
+                error: 'Submission is not pending.'
+            });
+        }
+
+        // Get the temporary file from B2
+        const b2Object = await s3.send(new GetObjectCommand({
+            Bucket: process.env.B2_BUCKET_NAME,
+            Key: submission.b2_key
+        }));
+
+        if (!b2Object.Body) {
+            throw new Error('B2 returned no file data.');
+        }
+
+        await client.query('BEGIN');
+
+        const man = new LargeObjectManager({ pg: client });
+
+        const [oid, dbStream] =
+            await man.createAndWritableStreamAsync(16384);
+
+        await new Promise((resolve, reject) => {
+            b2Object.Body.pipe(dbStream);
+
+            b2Object.Body.on('error', reject);
+            dbStream.on('finish', resolve);
+            dbStream.on('error', reject);
+        });
+
+        // The file is now stored in PostgreSQL
+        await client.query(
+            `UPDATE submissions
+             SET file_oid = $1,
+                 upload_status = 'complete'
+             WHERE id = $2`,
+            [oid, submission.id]
+        );
+/////////////////////////////////
+       await client.query('COMMIT');
+
+// PostgreSQL is now the permanent storage.
+// B2 is only temporary staging.
+try {
+    await s3.send(new DeleteObjectCommand({
+        Bucket: process.env.B2_BUCKET_NAME,
+        Key: submission.b2_key
+    }));
+
+    await pool.query(
+        `UPDATE submissions
+         SET b2_key = NULL
+         WHERE id = $1`,
+        [submission.id]
+    );
+
+} catch (deleteErr) {
+
+            /////////////////////////////////////////
+            // Do NOT fail the submission.
+            // The PostgreSQL copy is already complete.
+            console.error(
+                'Warning: Could not delete temporary B2 file:',
+                deleteErr
+            );
+        }
+
+        res.json({ success: true });
+
+    } catch (err) {
+        try {
+            await client.query('ROLLBACK');
+        } catch {}
+
+        console.error('Submission completion error:', err);
+
+        res.status(500).json({
+            error: 'Could not save submission.'
+        });
+
+    } finally {
+        client.release();
     }
 });
 
