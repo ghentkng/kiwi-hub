@@ -202,18 +202,21 @@ app.get('/reference', (req, res) => {
 
 app.get('/test-b2', async (req, res) => {
     try {
-        const { HeadBucketCommand } = require('@aws-sdk/client-s3');
+        const { PutObjectCommand } = require('@aws-sdk/client-s3');
 
-        await s3.send(new HeadBucketCommand({
-            Bucket: process.env.B2_BUCKET_NAME
+        await s3.send(new PutObjectCommand({
+            Bucket: process.env.B2_BUCKET_NAME,
+            Key: 'test/kiwi-hub-test.txt',
+            Body: 'Kiwi-Hub B2 test'
         }));
 
-        res.send('B2 connection successful!');
+        res.send('B2 upload successful!');
     } catch (err) {
         console.error('B2 test error:', err);
-        res.status(500).send('B2 connection failed.');
+        res.status(500).send('B2 upload failed.');
     }
 });
+
 app.listen(PORT, () => {
 console.log(`Server running at http://localhost:${PORT}`);
 });
