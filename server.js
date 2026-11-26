@@ -1,5 +1,10 @@
 // server.js
 
+process.on('exit', (code) => {
+    console.log('NODE EXITED WITH CODE:', code);
+});
+require('dotenv').config();
+
 const { Pool } = require('pg');
 const { LargeObjectManager } = require('pg-large-object');
 const {
@@ -89,7 +94,6 @@ downloadBinary(downloadUrl);            });
 
     return ytDlpPromise;
 }
-require('dotenv').config();
 
 const s3 = new S3Client({
     endpoint: process.env.B2_ENDPOINT,
@@ -119,7 +123,7 @@ secret: process.env.SESSION_SECRET || 'defaultsecret',
 resave: false,
 saveUninitialized: false,
 cookie: {
-    secure: true,       // Only send cookie over HTTPS
+    secure: process.env.NODE_ENV === 'production',       // Only send cookie over HTTPS
     sameSite: 'lax'     // Prevents infinite redirects in most setups
 }
 }));
@@ -133,6 +137,11 @@ app.get('/music', (req, res) => {
 
 // Music page authentication
 app.post('/music/login', (req, res) => {
+console.log('LOGIN ROUTE REACHED');
+    console.log('Music login:', {
+    passwordConfigured: !!process.env.MUSIC_PASSWORD,
+    sessionAvailable: !!req.session
+});
     const password = req.body.password;
 
     if (!process.env.MUSIC_PASSWORD) {
@@ -208,6 +217,7 @@ app.post('/music/download', async (req, res) => {
         const outputTemplate = path.join(tempDir, '%(id)s.%(ext)s');
 
         const args = [
+            '--js-runtimes', `node:${process.execPath}`,
             '--no-playlist',
             '--extract-audio',
             '--audio-format', 'mp3',
@@ -218,22 +228,21 @@ app.post('/music/download', async (req, res) => {
             videoUrl
         ];
 
-        const process = spawn(ytDlpPath, args);
-
+const downloader = spawn(ytDlpPath, args);
         let errorOutput = '';
 
-        process.stderr.on('data', (data) => {
+        downloader.stderr.on('data', (data) => {
             errorOutput += data.toString();
         });
 
-        process.on('error', async (error) => {
+        downloader.on('error', async (error) => {
             await fs.promises.rm(tempDir, { recursive: true, force: true });
             if (!res.headersSent) {
                 res.status(500).json({ error: 'Could not start the downloader.' });
             }
         });
 
-        process.on('close', async (code) => {
+        downloader.on('close', async (code) => {
             if (res.headersSent) return;
 
             if (code !== 0) {
@@ -709,8 +718,25 @@ try {
 });
 
 
-app.listen(PORT, () => {
-console.log(`Server running at http://localhost:${PORT}`);
+const server = app.listen(PORT);
+
+server.on('listening', () => {
+    console.log('LISTENING EVENT FIRED');
+    console.log('Server status:', server.listening);
+    console.log('Server address:', server.address());
+    console.log('Active handles:', process._getActiveHandles().map(h => h.constructor.name));
+});
+
+server.on('error', (error) => {
+    console.log('SERVER ERROR:', error);
+});
+
+server.on('close', () => {
+    console.log('SERVER CLOSED');
+});
+
+server.on('close', () => {
+    console.log('SERVER CLOSED');
 });
 
 //Period 1 playlist button
