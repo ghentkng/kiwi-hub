@@ -73,8 +73,7 @@
         <div id="musicSection" style="display: none;">
             <h2>Download Music</h2>
 
-            <input type="file" id="mediaFile" accept="audio/*,video/*">
-
+<input type="file" id="mediaFile" accept="audio/*,video/*">
             <button id="downloadButton">Convert to MP3</button>
 
             <p id="status"></p>
@@ -163,49 +162,35 @@
     });
 
     // Download button
- downloadButton.addEventListener('click', async function() {
-    const file = document.getElementById('mediaFile').files[0];
+downloadButton.addEventListener('click', async function() {
+    const url = document.getElementById('youtubeUrl').value.trim();
 
-    if (!file) {
-        statusMessage.textContent = 'Please select a file.';
+    if (!url) {
+        statusMessage.textContent = 'Please paste a YouTube URL.';
         return;
     }
 
-    const formData = new FormData();
-    formData.append('media', file);
-
-    downloadButton.disabled = true;
-    statusMessage.textContent = 'Converting...';
-
     try {
-        const response = await fetch('/music/convert', {
-            method: 'POST',
-            body: formData
-        });
+        const parsedUrl = new URL(url);
 
-        if (!response.ok) {
-            const data = await response.json();
-            statusMessage.textContent = data.message || 'Conversion failed.';
+        const validHosts = [
+            'youtube.com',
+            'www.youtube.com',
+            'youtu.be',
+            'm.youtube.com'
+        ];
+
+        if (!validHosts.includes(parsedUrl.hostname)) {
+            statusMessage.textContent = 'Please enter a valid YouTube URL.';
             return;
         }
-
-        const blob = await response.blob();
-        const downloadUrl = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-
-        link.href = downloadUrl;
-        link.download = 'converted.mp3';
-        link.click();
-
-        URL.revokeObjectURL(downloadUrl);
-        statusMessage.textContent = 'Conversion complete!';
     } catch (error) {
-        console.error(error);
-        statusMessage.textContent = 'Unable to connect to the server.';
-    } finally {
-        downloadButton.disabled = false;
+        statusMessage.textContent = 'Invalid URL.';
+        return;
     }
+
+    statusMessage.textContent = 'URL accepted.';
 });
-    // Check login on page load
+// Check login on page load
     checkAuthentication();
 </script>

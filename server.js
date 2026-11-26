@@ -18,24 +18,12 @@ const storage = multer.memoryStorage();
 
 const upload = multer({ storage: storage });
 
-const mediaUpload = multer({
-    storage: multer.memoryStorage(),
-    limits: {
-        fileSize: 100 * 1024 * 1024 // 100 MB
-    }
-});
-
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
 const fs = require('fs');
 
 require('dotenv').config();
-
-const ffmpeg = require('fluent-ffmpeg');
-const ffmpegPath = require('ffmpeg-static');
-ffmpeg.setFfmpegPath(ffmpegPath);
-
 
 const s3 = new S3Client({
     endpoint:process.env.B2_ENDPOINT,
@@ -108,128 +96,6 @@ app.get('/music/check-auth', (req, res) => {
 app.post('/music/logout', (req, res) => {
     req.session.musicAuthenticated = false;
     res.json({ success: true });
-});
-
-// Convert uploaded media to MP3
-app.post('/music/convert', (req, res) => {
-    if (req.session.musicAuthenticated !== true) {
-        return res.status(401).json({
-            success: false,
-            message: 'Authentication required.'
-        });
-    }
-
-    mediaUpload.single('media')(req, res, (err) => {
-        if (err) {
-            return res.status(400).json({
-                success: false,
-                message: err.message
-            });
-        }
-
-        if (!req.file) {
-            return res.status(400).json({
-                success: false,
-                message: 'Please upload a media file.'
-            });
-        }
-
-        const outputPath = path.join(
-            __dirname,
-            `temp-${crypto.randomUUID()}.mp3`
-        );
-
-        ffmpeg(req.file.buffer)
-            .toFormat('mp3')
-            .audioCodec('libmp3lame')
-            .audioBitrate('192k')
-            .on('error', (error) => {
-                console.error('Conversion error:', error);
-
-                if (!res.headersSent) {
-                    res.status(500).json({
-                        success: false,
-                        message: 'Conversion failed.'
-                    });
-                }
-
-                if (fs.existsSync(outputPath)) {
-                    fs.unlinkSync(outputPath);
-                }
-            })
-            .on('end', () => {
-                res.download(outputPath, 'converted.mp3', (error) => {
-                    if (fs.existsSync(outputPath)) {
-                        fs.unlinkSync(outputPath);
-                    }
-
-                    if (error && !res.headersSent) {
-                        res.status(500).end();
-                    }
-                });
-            })
-            .save(outputPath);
-    });
-});// Convert uploaded media to MP3
-app.post('/music/convert', (req, res) => {
-    if (req.session.musicAuthenticated !== true) {
-        return res.status(401).json({
-            success: false,
-            message: 'Authentication required.'
-        });
-    }
-
-    mediaUpload.single('media')(req, res, (err) => {
-        if (err) {
-            return res.status(400).json({
-                success: false,
-                message: err.message
-            });
-        }
-
-        if (!req.file) {
-            return res.status(400).json({
-                success: false,
-                message: 'Please upload a media file.'
-            });
-        }
-
-        const outputPath = path.join(
-            __dirname,
-            `temp-${crypto.randomUUID()}.mp3`
-        );
-
-        ffmpeg(req.file.buffer)
-            .toFormat('mp3')
-            .audioCodec('libmp3lame')
-            .audioBitrate('192k')
-            .on('error', (error) => {
-                console.error('Conversion error:', error);
-
-                if (!res.headersSent) {
-                    res.status(500).json({
-                        success: false,
-                        message: 'Conversion failed.'
-                    });
-                }
-
-                if (fs.existsSync(outputPath)) {
-                    fs.unlinkSync(outputPath);
-                }
-            })
-            .on('end', () => {
-                res.download(outputPath, 'converted.mp3', (error) => {
-                    if (fs.existsSync(outputPath)) {
-                        fs.unlinkSync(outputPath);
-                    }
-
-                    if (error && !res.headersSent) {
-                        res.status(500).end();
-                    }
-                });
-            })
-            .save(outputPath);
-    });
 });
 
 // Serve homepage
