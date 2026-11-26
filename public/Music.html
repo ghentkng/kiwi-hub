@@ -61,9 +61,9 @@
     <div class="container">
         <h1>Music Downloader</h1>
 
-        <input
-            type="password"
-            id="password"
+        <input 
+            type="password" 
+            id="password" 
             placeholder="Enter password"
         >
 
@@ -72,19 +72,7 @@
         <div id="musicSection" style="display: none;">
             <h2>Download Music</h2>
 
-            <input
-                type="text"
-                id="youtubeUrl"
-                placeholder="Paste YouTube URL here"
-            >
-
-            <input
-                type="text"
-                id="filename"
-                placeholder="Optional MP3 filename"
-            >
-
-            <button id="downloadButton">Convert to MP3</button>
+<input type="text" id="youtubeUrl" placeholder="Paste YouTube URL here">            <button id="downloadButton">Convert to MP3</button>
 
             <p id="status"></p>
         </div>
@@ -92,7 +80,6 @@
 
 </body>
 </html>
-
 <script>
     const passwordInput = document.getElementById('password');
     const loginButton = document.getElementById('loginButton');
@@ -100,7 +87,6 @@
     const statusMessage = document.getElementById('status');
     const downloadButton = document.getElementById('downloadButton');
     const youtubeUrlInput = document.getElementById('youtubeUrl');
-    const filenameInput = document.getElementById('filename');
 
     // Check if already logged in
     async function checkAuthentication() {
@@ -174,103 +160,80 @@
     });
 
     // Download button
-    downloadButton.addEventListener('click', async function() {
-        const url = youtubeUrlInput.value.trim();
-        const requestedFilename = filenameInput.value.trim();
 
-        if (!url) {
-            statusMessage.textContent = 'Please paste a YouTube URL.';
+// Download button
+downloadButton.addEventListener('click', async function() {
+    const url = youtubeUrlInput.value.trim();
+
+    if (!url) {
+        statusMessage.textContent = 'Please paste a YouTube URL.';
+        return;
+    }
+
+    try {
+        const parsedUrl = new URL(url);
+
+        const validHosts = [
+            'youtube.com',
+            'www.youtube.com',
+            'youtu.be',
+            'm.youtube.com'
+        ];
+
+        if (!validHosts.includes(parsedUrl.hostname)) {
+            statusMessage.textContent = 'Please enter a valid YouTube URL.';
             return;
         }
+    } catch (error) {
+        statusMessage.textContent = 'Invalid URL.';
+        return;
+    }
 
-        try {
-            const parsedUrl = new URL(url);
+    downloadButton.disabled = true;
+    downloadButton.textContent = 'Downloading...';
+    statusMessage.textContent = 'Downloading and converting to MP3. Please wait.';
 
-            const validHosts = [
-                'youtube.com',
-                'www.youtube.com',
-                'youtu.be',
-                'm.youtube.com'
-            ];
+    try {
+        const response = await fetch('/music/download', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ url })
+        });
 
-            if (!validHosts.includes(parsedUrl.hostname)) {
-                statusMessage.textContent = 'Please enter a valid YouTube URL.';
-                return;
-            }
-        } catch (error) {
-            statusMessage.textContent = 'Invalid URL.';
-            return;
-        }
+if (!response.ok) {
+    const data = await response.json();
+    throw new Error(
+        (data.error || 'Download failed.') +
+        (data.details ? '\n' + data.details : '')
+    );
+}
 
-        downloadButton.disabled = true;
-        downloadButton.textContent = 'Downloading...';
-        statusMessage.textContent = 'Downloading and converting to MP3. Please wait.';
+        const blob = await response.blob();
+        const downloadUrl = URL.createObjectURL(blob);
 
-        try {
-            const response = await fetch('/music/download', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ url })
-            });
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = 'audio.mp3';
 
-            if (!response.ok) {
-                const data = await response.json();
-                throw new Error(
-                    (data.error || 'Download failed.') +
-                    (data.details ? '\n' + data.details : '')
-                );
-            }
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
 
-            const blob = await response.blob();
-            const downloadUrl = URL.createObjectURL(blob);
+        URL.revokeObjectURL(downloadUrl);
 
-            // Use the user's filename if provided
-            let downloadFilename = requestedFilename;
+        statusMessage.textContent = 'Download ready!';
+    } catch (error) {
+        console.error('Download error:', error);
+        statusMessage.textContent = error.message || 'Unable to download the audio.';
+    } finally {
+        downloadButton.disabled = false;
+        downloadButton.textContent = 'Convert to MP3';
+    }
+});
 
-            // Otherwise, use the filename supplied by the server
-            if (!downloadFilename) {
-                const disposition = response.headers.get('Content-Disposition');
-                const match = disposition && disposition.match(/filename="?([^"]+)"?/i);
 
-                downloadFilename = match
-                    ? match[1]
-                    : 'audio';
-            }
-
-            // Remove invalid filename characters
-            downloadFilename = downloadFilename.replace(/[<>:"/\\|?*\x00-\x1F]/g, '');
-
-            // Remove an existing .mp3 extension before adding it
-            downloadFilename = downloadFilename.replace(/\.mp3$/i, '').trim();
-
-            if (!downloadFilename) {
-                downloadFilename = 'audio';
-            }
-
-            downloadFilename += '.mp3';
-
-            const link = document.createElement('a');
-            link.href = downloadUrl;
-            link.download = downloadFilename;
-
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-
-            URL.revokeObjectURL(downloadUrl);
-
-            statusMessage.textContent = 'Download ready!';
-        } catch (error) {
-            console.error('Download error:', error);
-            statusMessage.textContent = error.message || 'Unable to download the audio.';
-        } finally {
-            downloadButton.disabled = false;
-            downloadButton.textContent = 'Convert to MP3';
-        }
-    });
-
-    // Check login on page load
+// Check login on page load
     checkAuthentication();
 </script>
