@@ -29,6 +29,7 @@ const path = require('path');
 const fs = require('fs');
 const https = require('https');
 const os = require('os');
+const { Readable } = require('stream');
 const YTDLP_PATH = path.join(
     os.tmpdir(),
     process.platform === 'win32' ? 'yt-dlp.exe' : 'yt-dlp'
@@ -180,7 +181,9 @@ app.post('/music/logout', (req, res) => {
 
 app.post('/music/download', async (req, res) => {
     if (req.session.musicAuthenticated !== true) {
-        return res.status(401).json({ error: 'Please log in first.' });
+        return res.status(401).json({
+            error: 'Please log in first.'
+        });
     }
 
     const videoUrl = req.body.url;
@@ -190,7 +193,9 @@ app.post('/music/download', async (req, res) => {
     try {
         parsedUrl = new URL(videoUrl);
     } catch {
-        return res.status(400).json({ error: 'Please enter a valid YouTube URL.' });
+        return res.status(400).json({
+            error: 'Please enter a valid YouTube URL.'
+        });
     }
 
     const hostname = parsedUrl.hostname.toLowerCase();
@@ -201,94 +206,63 @@ app.post('/music/download', async (req, res) => {
           hostname === 'youtube.com' ||
           hostname.endsWith('.youtube.com'))
     ) {
-        return res.status(400).json({ error: 'Please enter a YouTube URL.' });
+        return res.status(400).json({
+            error: 'Please enter a YouTube URL.'
+        });
     }
 
-    let tempDir;
-
     try {
-        const ytDlpPath = await ensureYtDlp();
-        const ffmpegPath = require('ffmpeg-static');
-
-        tempDir = await fs.promises.mkdtemp(
-            path.join(os.tmpdir(), 'music-download-')
+        const response = await fetch(
+            'https://api.samplecut.app/v1/downloads',
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Client-Name': 'Kiwi-Hub'
+                },
+                body: JSON.stringify({
+                    url: videoUrl,
+                    format: 'mp3'
+                })
+            }
         );
 
-        const outputTemplate = path.join(tempDir, '%(id)s.%(ext)s');
+        const data = await response.json();
 
-        const args = [
-            '--js-runtimes', `node:${process.execPath}`,
-            '--no-playlist',
-            '--extract-audio',
-            '--audio-format', 'mp3',
-            '--audio-quality', '192K',
-            '--format', 'bestaudio/best',
-            '--ffmpeg-location', ffmpegPath,
-            '--output', outputTemplate,
-            videoUrl
-        ];
-
-const downloader = spawn(ytDlpPath, args);
-        let errorOutput = '';
-
-        downloader.stderr.on('data', (data) => {
-            errorOutput += data.toString();
-        });
-
-        downloader.on('error', async (error) => {
-            await fs.promises.rm(tempDir, { recursive: true, force: true });
-            if (!res.headersSent) {
-                res.status(500).json({ error: 'Could not start the downloader.' });
-            }
-        });
-
-        downloader.on('close', async (code) => {
-            if (res.headersSent) return;
-
-            if (code !== 0) {
-                await fs.promises.rm(tempDir, { recursive: true, force: true });
-                return res.status(500).json({
-                    error: 'The download failed.',
-details: errorOutput
-                });
-            }
-
-            try {
-                const files = await fs.promises.readdir(tempDir);
-                const mp3File = files.find(file => file.toLowerCase().endsWith('.mp3'));
-
-                if (!mp3File) {
-                    await fs.promises.rm(tempDir, { recursive: true, force: true });
-                    return res.status(500).json({ error: 'No MP3 file was produced.' });
-                }
-
-                const filePath = path.join(tempDir, mp3File);
-
-                res.download(filePath, mp3File, async (error) => {
-                    await fs.promises.rm(tempDir, { recursive: true, force: true });
-
-                    if (error && !res.headersSent) {
-                        res.status(500).json({ error: 'Could not send the MP3 file.' });
-                    }
-                });
-            } catch (error) {
-                await fs.promises.rm(tempDir, { recursive: true, force: true });
-
-                if (!res.headersSent) {
-                    res.status(500).json({ error: 'Could not prepare the MP3 download.' });
-                }
-            }
-        });
-
-    } catch (error) {
-        if (tempDir) {
-            await fs.promises.rm(tempDir, { recursive: true, force: true });
+        if (!response.ok || !data.download_url) {
+            return res.status(500).json({
+                error: 'The download failed.',
+                details: data.error || data.message || 'Samplecut error.'
+            });
         }
 
+        const audioResponse = await fetch(data.download_url);
+
+        if (!audioResponse.ok || !audioResponse.body) {
+            return res.status(500).json({
+                error: 'Could not retrieve the MP3 file.'
+            });
+        }
+
+        res.setHeader(
+            'Content-Type',
+            'audio/mpeg'
+        );
+
+        res.setHeader(
+            'Content-Disposition',
+            `attachment; filename="${data.filename || 'download.mp3'}"`
+        );
+
+        Readable.fromWeb(audioResponse.body).pipe(res);
+
+    } catch (error) {
         console.error('Music download error:', error);
 
         if (!res.headersSent) {
-            res.status(500).json({ error: 'The downloader could not be prepared.' });
+            res.status(500).json({
+                error: 'The download could not be completed.'
+            });
         }
     }
 });
