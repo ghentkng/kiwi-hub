@@ -88,82 +88,43 @@
 </body>
 </html>
 
+// Handle the Download button
+const downloadButton = document.getElementById('downloadButton');
+const youtubeUrlInput = document.getElementById('youtubeUrl');
 
-<script>
-    const passwordInput = document.getElementById('password');
-    const loginButton = document.getElementById('loginButton');
-    const musicSection = document.getElementById('musicSection');
-    const statusMessage = document.getElementById('status');
+downloadButton.addEventListener('click', async function() {
+    const url = youtubeUrlInput.value.trim();
 
-    // Check if the user is already logged in
-    async function checkAuthentication() {
-        try {
-            const response = await fetch('/music/check-auth');
-            const data = await response.json();
-
-            if (data.authenticated) {
-                showMusicSection();
-            }
-        } catch (error) {
-            console.error('Authentication check failed:', error);
-        }
+    if (!url) {
+        statusMessage.textContent = 'Please paste a video URL.';
+        return;
     }
 
-    // Authenticate the entered password
-    async function login() {
-        const password = passwordInput.value;
+    // Validate that it is a YouTube URL
+    try {
+        const parsedUrl = new URL(url);
 
-        if (!password) {
-            alert('Please enter a password.');
+        const isYouTube =
+            parsedUrl.hostname === 'youtube.com' ||
+            parsedUrl.hostname === 'www.youtube.com' ||
+            parsedUrl.hostname === 'youtu.be' ||
+            parsedUrl.hostname === 'm.youtube.com';
+
+        if (!isYouTube) {
+            statusMessage.textContent = 'Please enter a valid YouTube URL.';
             return;
         }
-
-        loginButton.disabled = true;
-        loginButton.textContent = 'Checking...';
-
-        try {
-            const response = await fetch('/music/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ password: password })
-            });
-
-            const data = await response.json();
-
-            if (response.ok && data.success) {
-                showMusicSection();
-                passwordInput.value = '';
-            } else {
-                alert(data.message || 'Incorrect password.');
-            }
-        } catch (error) {
-            console.error('Login error:', error);
-            alert('Unable to connect to the server.');
-        } finally {
-            loginButton.disabled = false;
-            loginButton.textContent = 'Enter';
-        }
+    } catch (error) {
+        statusMessage.textContent = 'Invalid URL.';
+        return;
     }
 
-    // Show the music interface after successful authentication
-    function showMusicSection() {
-        passwordInput.style.display = 'none';
-        loginButton.style.display = 'none';
-        musicSection.style.display = 'block';
-    }
+    downloadButton.disabled = true;
+    downloadButton.textContent = 'Processing...';
 
-    // Connect the button to the login function
-    loginButton.addEventListener('click', login);
+    statusMessage.textContent =
+        'URL accepted. Audio processing has not been connected yet.';
 
-    // Allow Enter key to submit the password
-    passwordInput.addEventListener('keydown', function(event) {
-        if (event.key === 'Enter') {
-            login();
-        }
-    });
-
-    // Check authentication when the page loads
-    checkAuthentication();
-</script>
+    downloadButton.disabled = false;
+    downloadButton.textContent = 'Download MP3';
+});
