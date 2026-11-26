@@ -203,10 +203,13 @@ downloadButton.addEventListener('click', async function() {
             body: JSON.stringify({ url })
         });
 
-        if (!response.ok) {
-            const data = await response.json();
-            throw new Error(data.error || 'Download failed.');
-        }
+if (!response.ok) {
+    const data = await response.json();
+    throw new Error(
+        (data.error || 'Download failed.') +
+        (data.details ? '\n' + data.details : '')
+    );
+}
 
         const blob = await response.blob();
         const downloadUrl = URL.createObjectURL(blob);
