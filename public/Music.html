@@ -88,44 +88,117 @@
 </body>
 </html>
 <script>
-// Handle the Download button
-const downloadButton = document.getElementById('downloadButton');
-const youtubeUrlInput = document.getElementById('youtubeUrl');
+    const passwordInput = document.getElementById('password');
+    const loginButton = document.getElementById('loginButton');
+    const musicSection = document.getElementById('musicSection');
+    const statusMessage = document.getElementById('status');
+    const downloadButton = document.getElementById('downloadButton');
+    const youtubeUrlInput = document.getElementById('youtubeUrl');
 
-downloadButton.addEventListener('click', async function() {
-    const url = youtubeUrlInput.value.trim();
+    // Check if already logged in
+    async function checkAuthentication() {
+        try {
+            const response = await fetch('/music/check-auth');
+            const data = await response.json();
 
-    if (!url) {
-        statusMessage.textContent = 'Please paste a video URL.';
-        return;
+            if (data.authenticated) {
+                showMusicSection();
+            }
+        } catch (error) {
+            console.error('Authentication check failed:', error);
+        }
     }
 
-    // Validate that it is a YouTube URL
-    try {
-        const parsedUrl = new URL(url);
+    // Login
+    async function login() {
+        const password = passwordInput.value.trim();
 
-        const isYouTube =
-            parsedUrl.hostname === 'youtube.com' ||
-            parsedUrl.hostname === 'www.youtube.com' ||
-            parsedUrl.hostname === 'youtu.be' ||
-            parsedUrl.hostname === 'm.youtube.com';
-
-        if (!isYouTube) {
-            statusMessage.textContent = 'Please enter a valid YouTube URL.';
+        if (!password) {
+            statusMessage.textContent = 'Please enter your password.';
             return;
         }
-    } catch (error) {
-        statusMessage.textContent = 'Invalid URL.';
-        return;
+
+        loginButton.disabled = true;
+        loginButton.textContent = 'Checking...';
+
+        try {
+            const response = await fetch('/music/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                showMusicSection();
+                passwordInput.value = '';
+                statusMessage.textContent = '';
+            } else {
+                statusMessage.textContent =
+                    data.message || 'Incorrect password.';
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            statusMessage.textContent = 'Unable to connect to the server.';
+        } finally {
+            loginButton.disabled = false;
+            loginButton.textContent = 'Enter';
+        }
     }
 
-    downloadButton.disabled = true;
-    downloadButton.textContent = 'Processing...';
+    // Show music interface
+    function showMusicSection() {
+        passwordInput.style.display = 'none';
+        loginButton.style.display = 'none';
+        musicSection.style.display = 'block';
+    }
 
-    statusMessage.textContent =
-        'URL accepted. Audio processing has not been connected yet.';
+    // Login button
+    loginButton.addEventListener('click', login);
 
-    downloadButton.disabled = false;
-    downloadButton.textContent = 'Download MP3';
-});
+    // Enter key to log in
+    passwordInput.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            login();
+        }
+    });
+
+    // Download button
+    downloadButton.addEventListener('click', async function() {
+        const url = youtubeUrlInput.value.trim();
+
+        if (!url) {
+            statusMessage.textContent = 'Please paste a URL first.';
+            return;
+        }
+
+        try {
+            const parsedUrl = new URL(url);
+
+            const validHosts = [
+                'youtube.com',
+                'www.youtube.com',
+                'youtu.be',
+                'm.youtube.com'
+            ];
+
+            if (!validHosts.includes(parsedUrl.hostname)) {
+                statusMessage.textContent =
+                    'Please enter a valid YouTube URL.';
+                return;
+            }
+        } catch (error) {
+            statusMessage.textContent = 'Invalid URL.';
+            return;
+        }
+
+        statusMessage.textContent =
+            'URL accepted. Download functionality is not yet connected.';
+    });
+
+    // Check login on page load
+    checkAuthentication();
 </script>
