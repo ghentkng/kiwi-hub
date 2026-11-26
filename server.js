@@ -60,7 +60,7 @@ const ADMIN_USER = process.env.ADMIN_USER || 'teacher';
 const ADMIN_PASS = process.env.ADMIN_PASS || 'mypassword';
 
 app.get('/music', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'Music.html'));
+    res.sendFile(path.join(__dirname, 'private', 'Music.html'));
 });
 
 // Music page authentication
