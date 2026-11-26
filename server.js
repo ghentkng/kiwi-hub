@@ -59,6 +59,42 @@ cookie: {
 const ADMIN_USER = process.env.ADMIN_USER || 'teacher';
 const ADMIN_PASS = process.env.ADMIN_PASS || 'mypassword';
 
+// Music page authentication
+app.post('/music/login', (req, res) => {
+    const password = req.body.password;
+
+    if (!process.env.MUSIC_PASSWORD) {
+        return res.status(500).json({
+            success: false,
+            message: 'Music password is not configured.'
+        });
+    }
+
+    if (password !== process.env.MUSIC_PASSWORD) {
+        return res.status(401).json({
+            success: false,
+            message: 'Incorrect password.'
+        });
+    }
+
+    req.session.musicAuthenticated = true;
+
+    res.json({ success: true });
+});
+
+// Music page authentication check
+app.get('/music/check-auth', (req, res) => {
+    res.json({
+        authenticated: req.session.musicAuthenticated === true
+    });
+});
+
+// Music page logout
+app.post('/music/logout', (req, res) => {
+    req.session.musicAuthenticated = false;
+    res.json({ success: true });
+});
+
 // Serve homepage
 app.get('/', (req, res) => {
 res.sendFile(path.join(__dirname, 'public', 'StudentSubmit.html'));
