@@ -239,8 +239,8 @@ app.post('/music/download', async (req, res) => {
             if (code !== 0) {
                 await fs.promises.rm(tempDir, { recursive: true, force: true });
                 return res.status(500).json({
-                    error: 'The download failed. Check the YouTube URL and try again.',
-                    details: errorOutput.slice(-1000)
+                    error: 'The download failed.',
+details: errorOutput
                 });
             }
 
