@@ -161,8 +161,10 @@
     });
 
     // Download button
+
+// Download button
 downloadButton.addEventListener('click', async function() {
-    const url = document.getElementById('youtubeUrl').value.trim();
+    const url = youtubeUrlInput.value.trim();
 
     if (!url) {
         statusMessage.textContent = 'Please paste a YouTube URL.';
@@ -188,8 +190,48 @@ downloadButton.addEventListener('click', async function() {
         return;
     }
 
-    statusMessage.textContent = 'URL accepted.';
+    downloadButton.disabled = true;
+    downloadButton.textContent = 'Downloading...';
+    statusMessage.textContent = 'Downloading and converting to MP3. Please wait.';
+
+    try {
+        const response = await fetch('/music/download', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ url })
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.error || 'Download failed.');
+        }
+
+        const blob = await response.blob();
+        const downloadUrl = URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = 'audio.mp3';
+
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        URL.revokeObjectURL(downloadUrl);
+
+        statusMessage.textContent = 'Download ready!';
+    } catch (error) {
+        console.error('Download error:', error);
+        statusMessage.textContent = error.message || 'Unable to download the audio.';
+    } finally {
+        downloadButton.disabled = false;
+        downloadButton.textContent = 'Convert to MP3';
+    }
 });
+
+
 // Check login on page load
     checkAuthentication();
 </script>

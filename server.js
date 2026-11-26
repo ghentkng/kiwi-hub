@@ -22,24 +22,93 @@ const express = require('express');
 const session = require('express-session');
 const path = require('path');
 const fs = require('fs');
+const https = require('https');
+const os = require('os');
+const YTDLP_PATH = path.join(
+    os.tmpdir(),
+    process.platform === 'win32' ? 'yt-dlp.exe' : 'yt-dlp'
+);
+let ytDlpPromise = null;
 
+function ensureYtDlp() {
+    if (!ytDlpPromise) {
+        ytDlpPromise = new Promise((resolve, reject) => {
+            fs.access(YTDLP_PATH, fs.constants.X_OK, (err) => {
+                if (!err) {
+                    resolve(YTDLP_PATH);
+                    return;
+                }
+
+                function downloadBinary(url, redirects = 0) {
+                    if (redirects > 10) {
+                        reject(new Error('Too many redirects downloading yt-dlp.'));
+                        return;
+                    }
+
+                    https.get(url, (response) => {
+                        if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+                            response.resume();
+                            downloadBinary(response.headers.location, redirects + 1);
+                            return;
+                        }
+
+                        if (response.statusCode !== 200) {
+                            response.resume();
+                            reject(new Error(`yt-dlp download failed: HTTP ${response.statusCode}`));
+                            return;
+                        }
+
+                        const file = fs.createWriteStream(YTDLP_PATH);
+                        response.pipe(file);
+
+                        file.on('finish', () => {
+                            file.close(async () => {
+                                try {
+                                    await fs.promises.chmod(YTDLP_PATH, 0o755);
+                                    resolve(YTDLP_PATH);
+                                } catch (error) {
+                                    reject(error);
+                                }
+                            });
+                        });
+
+                        file.on('error', reject);
+                    }).on('error', reject);
+                }
+
+const downloadUrl = process.platform === 'win32'
+    ? 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe'
+    : 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp';
+
+downloadBinary(downloadUrl);            });
+        }).catch((error) => {
+            ytDlpPromise = null;
+            throw error;
+        });
+    }
+
+    return ytDlpPromise;
+}
 require('dotenv').config();
 
 const s3 = new S3Client({
-    endpoint:process.env.B2_ENDPOINT,
+    endpoint: process.env.B2_ENDPOINT,
     region: 'us-west-004',
     requestChecksumCalculation: 'WHEN_REQUIRED',
 
-    credentials:{
-        accessKeyId: process.env.B2_KEY_ID.trim(),
-        secretAccessKey: process.env.B2_APPLICATION_KEY.trim()
-    }
+    credentials: process.env.B2_KEY_ID && process.env.B2_APPLICATION_KEY
+        ? {
+            accessKeyId: process.env.B2_KEY_ID.trim(),
+            secretAccessKey: process.env.B2_APPLICATION_KEY.trim()
+        }
+        : undefined
 });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const unzipper = require('unzipper');
-const { exec } = require('child_process');
+const { exec, spawn } = require('child_process');
+
 
 app.set('trust proxy', 1);
 app.use(express.json());
@@ -92,10 +161,127 @@ app.get('/music/check-auth', (req, res) => {
     });
 });
 
+
+
 // Music page logout
 app.post('/music/logout', (req, res) => {
     req.session.musicAuthenticated = false;
     res.json({ success: true });
+});
+
+app.post('/music/download', async (req, res) => {
+    if (req.session.musicAuthenticated !== true) {
+        return res.status(401).json({ error: 'Please log in first.' });
+    }
+
+    const videoUrl = req.body.url;
+
+    let parsedUrl;
+
+    try {
+        parsedUrl = new URL(videoUrl);
+    } catch {
+        return res.status(400).json({ error: 'Please enter a valid YouTube URL.' });
+    }
+
+    const hostname = parsedUrl.hostname.toLowerCase();
+
+    if (
+        parsedUrl.protocol !== 'https:' ||
+        !(hostname === 'youtu.be' ||
+          hostname === 'youtube.com' ||
+          hostname.endsWith('.youtube.com'))
+    ) {
+        return res.status(400).json({ error: 'Please enter a YouTube URL.' });
+    }
+
+    let tempDir;
+
+    try {
+        const ytDlpPath = await ensureYtDlp();
+        const ffmpegPath = require('ffmpeg-static');
+
+        tempDir = await fs.promises.mkdtemp(
+            path.join(os.tmpdir(), 'music-download-')
+        );
+
+        const outputTemplate = path.join(tempDir, '%(id)s.%(ext)s');
+
+        const args = [
+            '--no-playlist',
+            '--extract-audio',
+            '--audio-format', 'mp3',
+            '--audio-quality', '192K',
+            '--format', 'bestaudio/best',
+            '--ffmpeg-location', ffmpegPath,
+            '--output', outputTemplate,
+            videoUrl
+        ];
+
+        const process = spawn(ytDlpPath, args);
+
+        let errorOutput = '';
+
+        process.stderr.on('data', (data) => {
+            errorOutput += data.toString();
+        });
+
+        process.on('error', async (error) => {
+            await fs.promises.rm(tempDir, { recursive: true, force: true });
+            if (!res.headersSent) {
+                res.status(500).json({ error: 'Could not start the downloader.' });
+            }
+        });
+
+        process.on('close', async (code) => {
+            if (res.headersSent) return;
+
+            if (code !== 0) {
+                await fs.promises.rm(tempDir, { recursive: true, force: true });
+                return res.status(500).json({
+                    error: 'The download failed. Check the YouTube URL and try again.',
+                    details: errorOutput.slice(-1000)
+                });
+            }
+
+            try {
+                const files = await fs.promises.readdir(tempDir);
+                const mp3File = files.find(file => file.toLowerCase().endsWith('.mp3'));
+
+                if (!mp3File) {
+                    await fs.promises.rm(tempDir, { recursive: true, force: true });
+                    return res.status(500).json({ error: 'No MP3 file was produced.' });
+                }
+
+                const filePath = path.join(tempDir, mp3File);
+
+                res.download(filePath, mp3File, async (error) => {
+                    await fs.promises.rm(tempDir, { recursive: true, force: true });
+
+                    if (error && !res.headersSent) {
+                        res.status(500).json({ error: 'Could not send the MP3 file.' });
+                    }
+                });
+            } catch (error) {
+                await fs.promises.rm(tempDir, { recursive: true, force: true });
+
+                if (!res.headersSent) {
+                    res.status(500).json({ error: 'Could not prepare the MP3 download.' });
+                }
+            }
+        });
+
+    } catch (error) {
+        if (tempDir) {
+            await fs.promises.rm(tempDir, { recursive: true, force: true });
+        }
+
+        console.error('Music download error:', error);
+
+        if (!res.headersSent) {
+            res.status(500).json({ error: 'The downloader could not be prepared.' });
+        }
+    }
 });
 
 // Serve homepage
