@@ -249,10 +249,13 @@ app.post('/music/download', async (req, res) => {
             'audio/mpeg'
         );
 
-        res.setHeader(
-            'Content-Disposition',
-            `attachment; filename="${data.filename || 'download.mp3'}"`
-        );
+       const safeTitle = (data.title || 'audio')
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, '')
+    .trim()
+    .replace(/\.mp3$/i, '') || 'audio';
+
+res.setHeader('Content-Disposition', `attachment; filename="audio.mp3"`);
+res.setHeader('X-Audio-Title', encodeURIComponent(safeTitle));
 
         Readable.fromWeb(audioResponse.body).pipe(res);
 
